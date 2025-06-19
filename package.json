@@ -1,0 +1,9 @@
+{
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/nodemailer": "^6.4.17"
+  },
+  "dependencies": {
+    "@mui/icons-material": "^7.1.1"
+  }
+}

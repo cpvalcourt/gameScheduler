@@ -1,0 +1,1380 @@
+
+> frontend@0.0.0 test
+> vitest --run
+
+
+ RUN  v1.6.1 /Users/valcourc/Personal/AI_Coding/frontend
+
+ ✓ src/tests/services/api.test.ts  (5 tests) 4ms
+ ✓ src/tests/components/ProtectedRoute.test.tsx  (6 tests) 34ms
+ ❯ src/tests/components/GameManagement.test.tsx  (11 tests | 4 failed) 801ms
+   ❯ src/tests/components/GameManagement.test.tsx > GameManagement > Initial Render > should not show dialog initially
+     → expect(element).not.toBeInTheDocument()
+
+expected document not to contain element, found <button
+  color="primary"
+  sx="[object Object]"
+  variant="contained"
+>
+  Add Games
+</button> instead
+   ❯ src/tests/components/GameManagement.test.tsx > GameManagement > Dialog Opening/Closing > should open dialog when Add Games button is clicked
+     → Found multiple elements with the text: Add Games
+
+Here are the matching elements:
+
+Ignored nodes: comments, script, style
+[36m<button[39m
+  [33mcolor[39m=[32m"primary"[39m
+  [33msx[39m=[32m"[object Object]"[39m
+  [33mvariant[39m=[32m"contained"[39m
+[36m>[39m
+  [0mAdd Games[0m
+[36m</button>[39m
+
+Ignored nodes: comments, script, style
+[36m<h2>[39m
+  [0mAdd Games[0m
+[36m</h2>[39m
+
+(If this is intentional, then use the `*AllBy*` variant of the query (like `queryAllByText`, `getAllByText`, or `findAllByText`)).
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div>[39m
+      [36m<button[39m
+        [33mcolor[39m=[32m"primary"[39m
+        [33msx[39m=[32m"[object Object]"[39m
+        [33mvariant[39m=[32m"contained"[39m
+      [36m>[39m
+        [0mAdd Games[0m
+      [36m</button>[39m
+      [36m<div[39m
+        [33mmaxwidth[39m=[32m"sm"[39m
+      [36m>[39m
+        [36m<h2>[39m
+          [0mAdd Games[0m
+        [36m</h2>[39m
+        [36m<div>[39m
+          [36m<div[39m
+            [33msx[39m=[32m"[object Object]"[39m
+          [36m>[39m
+            [36m<input[39m
+              [33minputlabelprops[39m=[32m"[object Object]"[39m
+              [33mname[39m=[32m"date"[39m
+              [33mplaceholder[39m=[32m"Date"[39m
+              [33mtype[39m=[32m"date"[39m
+              [33mvalue[39m=[32m""[39m
+            [36m/>[39m
+            [36m<input[39m
+              [33minputlabelprops[39m=[32m"[object Object]"[39m
+              [33mname[39m=[32m"time"[39m
+              [33mplaceholder[39m=[32m"Time"[39m
+              [33mtype[39m=[32m"time"[39m
+              [33mvalue[39m=[32m""[39m
+            [36m/>[39m
+            [36m<input[39m
+              [33mname[39m=[32m"location"[39m
+              [33mplaceholder[39m=[32m"Location"[39m
+              [33mvalue[39m=[32m""[39m
+            [36m/>[39m
+            [36m<input[39m
+              [33mname[39m=[32m"opponent"[39m
+              [33mplaceholder[39m=[32m"Opponent"[39m
+              [33mvalue[39m=[32m""[39m
+            [36m/>[39m
+            [36m<label>[39m
+              [36m<input[39m
+                [33mchecked[39m=[32m""[39m
+                [33mname[39m=[32m"isHome"[39m
+                [33mtype[39m=[32m"checkbox"[39m
+              [36m/>[39m
+              [0mHome Game[0m
+            [36m</label>[39m
+            [36m<div[39m
+              [33msx[39m=[32m"[object Object]"[39m
+              [33mvariant[39m=[32m"subtitle1"[39m
+            [36m>[39m
+              [0mSelect Days[0m
+            [36m</div>[39m
+            [36m<div[39m
+              [33msx[39m=[32m"[object Object]"[39m
+            [36m>[39m
+              [36m<label>[39m
+                [36m<input[39m
+                  [33mtype[39m=[32m"checkbox"[39m
+                [36m/>[39m
+                [0mMonday[0m
+              [36m</label>[39m
+              [36m<label>[39m
+                [36m<input[39m
+                  [33mtype[39m=[32m"checkbox"[39m
+                [36m/>[39m
+                [0mTuesday[0m
+              [36m</label>[39m
+              [36m<label>[39m
+                [36m<input[39m
+                  [33mtype[39m=[32m"checkbox"[39m
+                [36m/>[39m
+                [0mWednesday[0m
+              [36m</label>[39m
+              [36m<label>[39m
+                [36m<input[39m
+                  [33mtype[39m=[32m"checkbox"[39m
+                [36m/>[39m
+                [0mThursday[0m
+              [36m</label>[39m
+              [36m<label>[39m
+                [36m<input[39m
+                  [33mtype[39m=[32m"checkbox"[39m
+                [36m/>[39m
+                [0mFriday[0m
+              [36m</label>[39m
+              [36m<label>[39m
+                [36m<input[39m
+                  [33mtype[39m=[32m"checkbox"[39m
+                [36m/>[39m
+                [0mSaturday[0m
+              [36m</label>[39m
+              [36m<label>[39m
+                [36m<input[39m
+                  [33mtype[39m=[32m"checkbox"[39m
+                [36m/>[39m
+                [0mSunday[0m
+              [36m</label>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div>[39m
+          [36m<button>[39m
+            [0mCancel[0m
+          [36m</button>[39m
+          [36m<button[39m
+            [33mcolor[39m=[32m"primary"[39m
+            [33mvariant[39m=[32m"contained"[39m
+          [36m>[39m
+            [0mCreate Games[0m
+          [36m</button>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+   ❯ src/tests/components/GameManagement.test.tsx > GameManagement > Dialog Opening/Closing > should close dialog when Cancel button is clicked
+     → expect(element).not.toBeInTheDocument()
+
+expected document not to contain element, found <button
+  color="primary"
+  sx="[object Object]"
+  variant="contained"
+>
+  Add Games
+</button> instead
+   ❯ src/tests/components/GameManagement.test.tsx > GameManagement > Form Interactions > should handle checkbox changes
+     → expect(element).toBeChecked()
+
+Received element is not checked:
+  <input
+  checked=""
+  name="isHome"
+  type="checkbox"
+/>
+ ❯ src/tests/contexts/AuthContext.test.tsx  (11 tests | 1 failed) 1138ms
+   ❯ src/tests/contexts/AuthContext.test.tsx > AuthContext > AuthProvider > should validate stored token on mount
+     → expected "wrap" to be called with arguments: [ '/auth/me' ]
+
+Received: 
+
+  1st wrap call:
+
+  Array [
+-   "/auth/me",
++   "/users/me",
+  ]
+
+
+Number of calls: 1
+
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<div>[39m
+        [36m<div[39m
+          [33mdata-testid[39m=[32m"loading"[39m
+        [36m>[39m
+          [0mNot Loading[0m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mdata-testid[39m=[32m"user"[39m
+        [36m>[39m
+          [0m{"id":1,"email":"test@example.com","username":"testuser","is_verified":true}[0m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mdata-testid[39m=[32m"error"[39m
+        [36m>[39m
+          [0mNo Error[0m
+        [36m</div>[39m
+        [36m<button>[39m
+          [0mLogin[0m
+        [36m</button>[39m
+        [36m<button>[39m
+          [0mLogout[0m
+        [36m</button>[39m
+        [36m<button>[39m
+          [0mRegister[0m
+        [36m</button>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</body>[39m
+[36m</html>[39m
+ ❯ src/tests/integration/UserFlow.test.tsx  (8 tests | 8 failed) 486ms
+   ❯ src/tests/integration/UserFlow.test.tsx > User Flow Integration Tests > Authentication Flow > should allow user to register and then login
+     → Unable to find an element with the text: /register/i. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mcomponent[39m=[32m"main"[39m
+      [33mmaxwidth[39m=[32m"xs"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33msx[39m=[32m"[object Object]"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mcomponent[39m=[32m"h1"[39m
+          [33mvariant[39m=[32m"h5"[39m
+        [36m>[39m
+          [0mSign in[0m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mcomponent[39m=[32m"form"[39m
+          [33mnovalidate[39m=[32m""[39m
+          [33msx[39m=[32m"[object Object]"[39m
+        [36m>[39m
+          [36m<input[39m
+            [33mautocomplete[39m=[32m"email"[39m
+            [33mid[39m=[32m"email"[39m
+            [33mmargin[39m=[32m"normal"[39m
+            [33mname[39m=[32m"email"[39m
+            [33mplaceholder[39m=[32m"Email Address"[39m
+            [33mrequired[39m=[32m""[39m
+            [33mvalue[39m=[32m""[39m
+          [36m/>[39m
+          [36m<input[39m
+            [33mautocomplete[39m=[32m"current-password"[39m
+            [33mid[39m=[32m"password"[39m
+            [33mmargin[39m=[32m"normal"[39m
+            [33mname[39m=[32m"password"[39m
+            [33mplaceholder[39m=[32m"Password"[39m
+            [33mrequired[39m=[32m""[39m
+            [33mtype[39m=[32m"password"[39m
+            [33mvalue[39m=[32m""[39m
+          [36m/>[39m
+          [36m<button[39m
+            [33msx[39m=[32m"[object Object]"[39m
+            [33mtype[39m=[32m"submit"[39m
+            [33mvariant[39m=[32m"contained"[39m
+          [36m>[39m
+            [0mSign In[0m
+          [36m</button>[39m
+          [36m<div[39m
+            [33msx[39m=[32m"[object Object]"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mvariant[39m=[32m"body2"[39m
+            [36m>[39m
+              [0mDon't have an account?[0m
+              [0m [0m
+              [36m<a[39m
+                [33mclass[39m=[32m"MuiTypography-root MuiTypography-body2 MuiLink-root MuiLink-underlineAlways css-101ca9i-MuiTypography-root-MuiLink-root"[39m
+                [33mhref[39m=[32m"/register"[39m
+              [36m>[39m
+                [0mSign up here[0m
+              [36m</a>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+   ❯ src/tests/integration/UserFlow.test.tsx > User Flow Integration Tests > Authentication Flow > should handle authentication errors gracefully
+     → Found multiple elements with the text: /sign in/i
+
+Here are the matching elements:
+
+Ignored nodes: comments, script, style
+[36m<div[39m
+  [33mcomponent[39m=[32m"h1"[39m
+  [33mvariant[39m=[32m"h5"[39m
+[36m>[39m
+  [0mSign in[0m
+[36m</div>[39m
+
+Ignored nodes: comments, script, style
+[36m<button[39m
+  [33msx[39m=[32m"[object Object]"[39m
+  [33mtype[39m=[32m"submit"[39m
+  [33mvariant[39m=[32m"contained"[39m
+[36m>[39m
+  [0mSign In[0m
+[36m</button>[39m
+
+(If this is intentional, then use the `*AllBy*` variant of the query (like `queryAllByText`, `getAllByText`, or `findAllByText`)).
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mcomponent[39m=[32m"main"[39m
+      [33mmaxwidth[39m=[32m"xs"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33msx[39m=[32m"[object Object]"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mcomponent[39m=[32m"h1"[39m
+          [33mvariant[39m=[32m"h5"[39m
+        [36m>[39m
+          [0mSign in[0m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mcomponent[39m=[32m"form"[39m
+          [33mnovalidate[39m=[32m""[39m
+          [33msx[39m=[32m"[object Object]"[39m
+        [36m>[39m
+          [36m<input[39m
+            [33mautocomplete[39m=[32m"email"[39m
+            [33mid[39m=[32m"email"[39m
+            [33mmargin[39m=[32m"normal"[39m
+            [33mname[39m=[32m"email"[39m
+            [33mplaceholder[39m=[32m"Email Address"[39m
+            [33mrequired[39m=[32m""[39m
+            [33mvalue[39m=[32m"invalid@example.com"[39m
+          [36m/>[39m
+          [36m<input[39m
+            [33mautocomplete[39m=[32m"current-password"[39m
+            [33mid[39m=[32m"password"[39m
+            [33mmargin[39m=[32m"normal"[39m
+            [33mname[39m=[32m"password"[39m
+            [33mplaceholder[39m=[32m"Password"[39m
+            [33mrequired[39m=[32m""[39m
+            [33mtype[39m=[32m"password"[39m
+            [33mvalue[39m=[32m"wrongpassword"[39m
+          [36m/>[39m
+          [36m<button[39m
+            [33msx[39m=[32m"[object Object]"[39m
+            [33mtype[39m=[32m"submit"[39m
+            [33mvariant[39m=[32m"contained"[39m
+          [36m>[39m
+            [0mSign In[0m
+          [36m</button>[39m
+          [36m<div[39m
+            [33msx[39m=[32m"[object Object]"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mvariant[39m=[32m"body2"[39m
+            [36m>[39m
+              [0mDon't have an account?[0m
+              [0m [0m
+              [36m<a[39m
+                [33mclass[39m=[32m"MuiTypography-root MuiTypography-body2 MuiLink-root MuiLink-underlineAlways css-101ca9i-MuiTypography-root-MuiLink-root"[39m
+                [33mhref[39m=[32m"/register"[39m
+              [36m>[39m
+                [0mSign up here[0m
+              [36m</a>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+   ❯ src/tests/integration/UserFlow.test.tsx > User Flow Integration Tests > Protected Route Flow > should redirect unauthenticated users to login
+     → Unable to find an element with the text: /dashboard/i. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mcomponent[39m=[32m"main"[39m
+      [33mmaxwidth[39m=[32m"xs"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33msx[39m=[32m"[object Object]"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mcomponent[39m=[32m"h1"[39m
+          [33mvariant[39m=[32m"h5"[39m
+        [36m>[39m
+          [0mSign in[0m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mcomponent[39m=[32m"form"[39m
+          [33mnovalidate[39m=[32m""[39m
+          [33msx[39m=[32m"[object Object]"[39m
+        [36m>[39m
+          [36m<input[39m
+            [33mautocomplete[39m=[32m"email"[39m
+            [33mid[39m=[32m"email"[39m
+            [33mmargin[39m=[32m"normal"[39m
+            [33mname[39m=[32m"email"[39m
+            [33mplaceholder[39m=[32m"Email Address"[39m
+            [33mrequired[39m=[32m""[39m
+            [33mvalue[39m=[32m""[39m
+          [36m/>[39m
+          [36m<input[39m
+            [33mautocomplete[39m=[32m"current-password"[39m
+            [33mid[39m=[32m"password"[39m
+            [33mmargin[39m=[32m"normal"[39m
+            [33mname[39m=[32m"password"[39m
+            [33mplaceholder[39m=[32m"Password"[39m
+            [33mrequired[39m=[32m""[39m
+            [33mtype[39m=[32m"password"[39m
+            [33mvalue[39m=[32m""[39m
+          [36m/>[39m
+          [36m<button[39m
+            [33msx[39m=[32m"[object Object]"[39m
+            [33mtype[39m=[32m"submit"[39m
+            [33mvariant[39m=[32m"contained"[39m
+          [36m>[39m
+            [0mSign In[0m
+          [36m</button>[39m
+          [36m<div[39m
+            [33msx[39m=[32m"[object Object]"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mvariant[39m=[32m"body2"[39m
+            [36m>[39m
+              [0mDon't have an account?[0m
+              [0m [0m
+              [36m<a[39m
+                [33mclass[39m=[32m"MuiTypography-root MuiTypography-body2 MuiLink-root MuiLink-underlineAlways css-101ca9i-MuiTypography-root-MuiLink-root"[39m
+                [33mhref[39m=[32m"/register"[39m
+              [36m>[39m
+                [0mSign up here[0m
+              [36m</a>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+   ❯ src/tests/integration/UserFlow.test.tsx > User Flow Integration Tests > Protected Route Flow > should allow authenticated users to access protected routes
+     → Found multiple elements with the text: /sign in/i
+
+Here are the matching elements:
+
+Ignored nodes: comments, script, style
+[36m<div[39m
+  [33mcomponent[39m=[32m"h1"[39m
+  [33mvariant[39m=[32m"h5"[39m
+[36m>[39m
+  [0mSign in[0m
+[36m</div>[39m
+
+Ignored nodes: comments, script, style
+[36m<button[39m
+  [33msx[39m=[32m"[object Object]"[39m
+  [33mtype[39m=[32m"submit"[39m
+  [33mvariant[39m=[32m"contained"[39m
+[36m>[39m
+  [0mSign In[0m
+[36m</button>[39m
+
+(If this is intentional, then use the `*AllBy*` variant of the query (like `queryAllByText`, `getAllByText`, or `findAllByText`)).
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mcomponent[39m=[32m"main"[39m
+      [33mmaxwidth[39m=[32m"xs"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33msx[39m=[32m"[object Object]"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mcomponent[39m=[32m"h1"[39m
+          [33mvariant[39m=[32m"h5"[39m
+        [36m>[39m
+          [0mSign in[0m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mcomponent[39m=[32m"form"[39m
+          [33mnovalidate[39m=[32m""[39m
+          [33msx[39m=[32m"[object Object]"[39m
+        [36m>[39m
+          [36m<input[39m
+            [33mautocomplete[39m=[32m"email"[39m
+            [33mid[39m=[32m"email"[39m
+            [33mmargin[39m=[32m"normal"[39m
+            [33mname[39m=[32m"email"[39m
+            [33mplaceholder[39m=[32m"Email Address"[39m
+            [33mrequired[39m=[32m""[39m
+            [33mvalue[39m=[32m"test@example.com"[39m
+          [36m/>[39m
+          [36m<input[39m
+            [33mautocomplete[39m=[32m"current-password"[39m
+            [33mid[39m=[32m"password"[39m
+            [33mmargin[39m=[32m"normal"[39m
+            [33mname[39m=[32m"password"[39m
+            [33mplaceholder[39m=[32m"Password"[39m
+            [33mrequired[39m=[32m""[39m
+            [33mtype[39m=[32m"password"[39m
+            [33mvalue[39m=[32m"password123"[39m
+          [36m/>[39m
+          [36m<button[39m
+            [33msx[39m=[32m"[object Object]"[39m
+            [33mtype[39m=[32m"submit"[39m
+            [33mvariant[39m=[32m"contained"[39m
+          [36m>[39m
+            [0mSign In[0m
+          [36m</button>[39m
+          [36m<div[39m
+            [33msx[39m=[32m"[object Object]"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mvariant[39m=[32m"body2"[39m
+            [36m>[39m
+              [0mDon't have an account?[0m
+              [0m [0m
+              [36m<a[39m
+                [33mclass[39m=[32m"MuiTypography-root MuiTypography-body2 MuiLink-root MuiLink-underlineAlways css-101ca9i-MuiTypography-root-MuiLink-root"[39m
+                [33mhref[39m=[32m"/register"[39m
+              [36m>[39m
+                [0mSign up here[0m
+              [36m</a>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+   ❯ src/tests/integration/UserFlow.test.tsx > User Flow Integration Tests > Data Management Flow > should allow authenticated users to manage their data
+     → Found multiple elements with the text: /sign in/i
+
+Here are the matching elements:
+
+Ignored nodes: comments, script, style
+[36m<div[39m
+  [33mcomponent[39m=[32m"h1"[39m
+  [33mvariant[39m=[32m"h5"[39m
+[36m>[39m
+  [0mSign in[0m
+[36m</div>[39m
+
+Ignored nodes: comments, script, style
+[36m<button[39m
+  [33msx[39m=[32m"[object Object]"[39m
+  [33mtype[39m=[32m"submit"[39m
+  [33mvariant[39m=[32m"contained"[39m
+[36m>[39m
+  [0mSign In[0m
+[36m</button>[39m
+
+(If this is intentional, then use the `*AllBy*` variant of the query (like `queryAllByText`, `getAllByText`, or `findAllByText`)).
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mcomponent[39m=[32m"main"[39m
+      [33mmaxwidth[39m=[32m"xs"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33msx[39m=[32m"[object Object]"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mcomponent[39m=[32m"h1"[39m
+          [33mvariant[39m=[32m"h5"[39m
+        [36m>[39m
+          [0mSign in[0m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mcomponent[39m=[32m"form"[39m
+          [33mnovalidate[39m=[32m""[39m
+          [33msx[39m=[32m"[object Object]"[39m
+        [36m>[39m
+          [36m<input[39m
+            [33mautocomplete[39m=[32m"email"[39m
+            [33mid[39m=[32m"email"[39m
+            [33mmargin[39m=[32m"normal"[39m
+            [33mname[39m=[32m"email"[39m
+            [33mplaceholder[39m=[32m"Email Address"[39m
+            [33mrequired[39m=[32m""[39m
+            [33mvalue[39m=[32m"test@example.com"[39m
+          [36m/>[39m
+          [36m<input[39m
+            [33mautocomplete[39m=[32m"current-password"[39m
+            [33mid[39m=[32m"password"[39m
+            [33mmargin[39m=[32m"normal"[39m
+            [33mname[39m=[32m"password"[39m
+            [33mplaceholder[39m=[32m"Password"[39m
+            [33mrequired[39m=[32m""[39m
+            [33mtype[39m=[32m"password"[39m
+            [33mvalue[39m=[32m"password123"[39m
+          [36m/>[39m
+          [36m<button[39m
+            [33msx[39m=[32m"[object Object]"[39m
+            [33mtype[39m=[32m"submit"[39m
+            [33mvariant[39m=[32m"contained"[39m
+          [36m>[39m
+            [0mSign In[0m
+          [36m</button>[39m
+          [36m<div[39m
+            [33msx[39m=[32m"[object Object]"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mvariant[39m=[32m"body2"[39m
+            [36m>[39m
+              [0mDon't have an account?[0m
+              [0m [0m
+              [36m<a[39m
+                [33mclass[39m=[32m"MuiTypography-root MuiTypography-body2 MuiLink-root MuiLink-underlineAlways css-101ca9i-MuiTypography-root-MuiLink-root"[39m
+                [33mhref[39m=[32m"/register"[39m
+              [36m>[39m
+                [0mSign up here[0m
+              [36m</a>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+   ❯ src/tests/integration/UserFlow.test.tsx > User Flow Integration Tests > Error Handling Flow > should handle network errors gracefully
+     → Found multiple elements with the text: /sign in/i
+
+Here are the matching elements:
+
+Ignored nodes: comments, script, style
+[36m<div[39m
+  [33mcomponent[39m=[32m"h1"[39m
+  [33mvariant[39m=[32m"h5"[39m
+[36m>[39m
+  [0mSign in[0m
+[36m</div>[39m
+
+Ignored nodes: comments, script, style
+[36m<button[39m
+  [33msx[39m=[32m"[object Object]"[39m
+  [33mtype[39m=[32m"submit"[39m
+  [33mvariant[39m=[32m"contained"[39m
+[36m>[39m
+  [0mSign In[0m
+[36m</button>[39m
+
+(If this is intentional, then use the `*AllBy*` variant of the query (like `queryAllByText`, `getAllByText`, or `findAllByText`)).
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mcomponent[39m=[32m"main"[39m
+      [33mmaxwidth[39m=[32m"xs"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33msx[39m=[32m"[object Object]"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mcomponent[39m=[32m"h1"[39m
+          [33mvariant[39m=[32m"h5"[39m
+        [36m>[39m
+          [0mSign in[0m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mcomponent[39m=[32m"form"[39m
+          [33mnovalidate[39m=[32m""[39m
+          [33msx[39m=[32m"[object Object]"[39m
+        [36m>[39m
+          [36m<input[39m
+            [33mautocomplete[39m=[32m"email"[39m
+            [33mid[39m=[32m"email"[39m
+            [33mmargin[39m=[32m"normal"[39m
+            [33mname[39m=[32m"email"[39m
+            [33mplaceholder[39m=[32m"Email Address"[39m
+            [33mrequired[39m=[32m""[39m
+            [33mvalue[39m=[32m"test@example.com"[39m
+          [36m/>[39m
+          [36m<input[39m
+            [33mautocomplete[39m=[32m"current-password"[39m
+            [33mid[39m=[32m"password"[39m
+            [33mmargin[39m=[32m"normal"[39m
+            [33mname[39m=[32m"password"[39m
+            [33mplaceholder[39m=[32m"Password"[39m
+            [33mrequired[39m=[32m""[39m
+            [33mtype[39m=[32m"password"[39m
+            [33mvalue[39m=[32m"password123"[39m
+          [36m/>[39m
+          [36m<button[39m
+            [33msx[39m=[32m"[object Object]"[39m
+            [33mtype[39m=[32m"submit"[39m
+            [33mvariant[39m=[32m"contained"[39m
+          [36m>[39m
+            [0mSign In[0m
+          [36m</button>[39m
+          [36m<div[39m
+            [33msx[39m=[32m"[object Object]"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mvariant[39m=[32m"body2"[39m
+            [36m>[39m
+              [0mDon't have an account?[0m
+              [0m [0m
+              [36m<a[39m
+                [33mclass[39m=[32m"MuiTypography-root MuiTypography-body2 MuiLink-root MuiLink-underlineAlways css-101ca9i-MuiTypography-root-MuiLink-root"[39m
+                [33mhref[39m=[32m"/register"[39m
+              [36m>[39m
+                [0mSign up here[0m
+              [36m</a>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+   ❯ src/tests/integration/UserFlow.test.tsx > User Flow Integration Tests > Error Handling Flow > should handle 401 errors by logging out user
+     → Unable to find an element with the text: /teams/i. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mcomponent[39m=[32m"main"[39m
+      [33mmaxwidth[39m=[32m"xs"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33msx[39m=[32m"[object Object]"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mcomponent[39m=[32m"h1"[39m
+          [33mvariant[39m=[32m"h5"[39m
+        [36m>[39m
+          [0mSign in[0m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mcomponent[39m=[32m"form"[39m
+          [33mnovalidate[39m=[32m""[39m
+          [33msx[39m=[32m"[object Object]"[39m
+        [36m>[39m
+          [36m<input[39m
+            [33mautocomplete[39m=[32m"email"[39m
+            [33mid[39m=[32m"email"[39m
+            [33mmargin[39m=[32m"normal"[39m
+            [33mname[39m=[32m"email"[39m
+            [33mplaceholder[39m=[32m"Email Address"[39m
+            [33mrequired[39m=[32m""[39m
+            [33mvalue[39m=[32m""[39m
+          [36m/>[39m
+          [36m<input[39m
+            [33mautocomplete[39m=[32m"current-password"[39m
+            [33mid[39m=[32m"password"[39m
+            [33mmargin[39m=[32m"normal"[39m
+            [33mname[39m=[32m"password"[39m
+            [33mplaceholder[39m=[32m"Password"[39m
+            [33mrequired[39m=[32m""[39m
+            [33mtype[39m=[32m"password"[39m
+            [33mvalue[39m=[32m""[39m
+          [36m/>[39m
+          [36m<button[39m
+            [33msx[39m=[32m"[object Object]"[39m
+            [33mtype[39m=[32m"submit"[39m
+            [33mvariant[39m=[32m"contained"[39m
+          [36m>[39m
+            [0mSign In[0m
+          [36m</button>[39m
+          [36m<div[39m
+            [33msx[39m=[32m"[object Object]"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mvariant[39m=[32m"body2"[39m
+            [36m>[39m
+              [0mDon't have an account?[0m
+              [0m [0m
+              [36m<a[39m
+                [33mclass[39m=[32m"MuiTypography-root MuiTypography-body2 MuiLink-root MuiLink-underlineAlways css-101ca9i-MuiTypography-root-MuiLink-root"[39m
+                [33mhref[39m=[32m"/register"[39m
+              [36m>[39m
+                [0mSign up here[0m
+              [36m</a>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+   ❯ src/tests/integration/UserFlow.test.tsx > User Flow Integration Tests > Navigation Flow > should allow users to navigate between different sections
+     → Found multiple elements with the text: /sign in/i
+
+Here are the matching elements:
+
+Ignored nodes: comments, script, style
+[36m<div[39m
+  [33mcomponent[39m=[32m"h1"[39m
+  [33mvariant[39m=[32m"h5"[39m
+[36m>[39m
+  [0mSign in[0m
+[36m</div>[39m
+
+Ignored nodes: comments, script, style
+[36m<button[39m
+  [33msx[39m=[32m"[object Object]"[39m
+  [33mtype[39m=[32m"submit"[39m
+  [33mvariant[39m=[32m"contained"[39m
+[36m>[39m
+  [0mSign In[0m
+[36m</button>[39m
+
+(If this is intentional, then use the `*AllBy*` variant of the query (like `queryAllByText`, `getAllByText`, or `findAllByText`)).
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mcomponent[39m=[32m"main"[39m
+      [33mmaxwidth[39m=[32m"xs"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33msx[39m=[32m"[object Object]"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mcomponent[39m=[32m"h1"[39m
+          [33mvariant[39m=[32m"h5"[39m
+        [36m>[39m
+          [0mSign in[0m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mcomponent[39m=[32m"form"[39m
+          [33mnovalidate[39m=[32m""[39m
+          [33msx[39m=[32m"[object Object]"[39m
+        [36m>[39m
+          [36m<input[39m
+            [33mautocomplete[39m=[32m"email"[39m
+            [33mid[39m=[32m"email"[39m
+            [33mmargin[39m=[32m"normal"[39m
+            [33mname[39m=[32m"email"[39m
+            [33mplaceholder[39m=[32m"Email Address"[39m
+            [33mrequired[39m=[32m""[39m
+            [33mvalue[39m=[32m"test@example.com"[39m
+          [36m/>[39m
+          [36m<input[39m
+            [33mautocomplete[39m=[32m"current-password"[39m
+            [33mid[39m=[32m"password"[39m
+            [33mmargin[39m=[32m"normal"[39m
+            [33mname[39m=[32m"password"[39m
+            [33mplaceholder[39m=[32m"Password"[39m
+            [33mrequired[39m=[32m""[39m
+            [33mtype[39m=[32m"password"[39m
+            [33mvalue[39m=[32m"password123"[39m
+          [36m/>[39m
+          [36m<button[39m
+            [33msx[39m=[32m"[object Object]"[39m
+            [33mtype[39m=[32m"submit"[39m
+            [33mvariant[39m=[32m"contained"[39m
+          [36m>[39m
+            [0mSign In[0m
+          [36m</button>[39m
+          [36m<div[39m
+            [33msx[39m=[32m"[object Object]"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mvariant[39m=[32m"body2"[39m
+            [36m>[39m
+              [0mDon't have an account?[0m
+              [0m [0m
+              [36m<a[39m
+                [33mclass[39m=[32m"MuiTypography-root MuiTypography-body2 MuiLink-root MuiLink-underlineAlways css-101ca9i-MuiTypography-root-MuiLink-root"[39m
+                [33mhref[39m=[32m"/register"[39m
+              [36m>[39m
+                [0mSign up here[0m
+              [36m</a>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ src/tests/integration/GameManagementFlow.test.tsx  (5 tests | 5 failed) 461ms
+   ❯ src/tests/integration/GameManagementFlow.test.tsx > Game Management Flow Integration Tests > Complete Game Management Flow > should allow users to create game series and manage games
+     → Found multiple elements with the text: /sign in/i
+
+Here are the matching elements:
+
+Ignored nodes: comments, script, style
+[36m<div[39m
+  [33mcomponent[39m=[32m"h1"[39m
+  [33mvariant[39m=[32m"h5"[39m
+[36m>[39m
+  [0mSign in[0m
+[36m</div>[39m
+
+Ignored nodes: comments, script, style
+[36m<button[39m
+  [33msx[39m=[32m"[object Object]"[39m
+  [33mtype[39m=[32m"submit"[39m
+  [33mvariant[39m=[32m"contained"[39m
+[36m>[39m
+  [0mSign In[0m
+[36m</button>[39m
+
+(If this is intentional, then use the `*AllBy*` variant of the query (like `queryAllByText`, `getAllByText`, or `findAllByText`)).
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mcomponent[39m=[32m"main"[39m
+      [33mmaxwidth[39m=[32m"xs"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33msx[39m=[32m"[object Object]"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mcomponent[39m=[32m"h1"[39m
+          [33mvariant[39m=[32m"h5"[39m
+        [36m>[39m
+          [0mSign in[0m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mcomponent[39m=[32m"form"[39m
+          [33mnovalidate[39m=[32m""[39m
+          [33msx[39m=[32m"[object Object]"[39m
+        [36m>[39m
+          [36m<input[39m
+            [33mautocomplete[39m=[32m"email"[39m
+            [33mid[39m=[32m"email"[39m
+            [33mmargin[39m=[32m"normal"[39m
+            [33mname[39m=[32m"email"[39m
+            [33mplaceholder[39m=[32m"Email Address"[39m
+            [33mrequired[39m=[32m""[39m
+            [33mvalue[39m=[32m"test@example.com"[39m
+          [36m/>[39m
+          [36m<input[39m
+            [33mautocomplete[39m=[32m"current-password"[39m
+            [33mid[39m=[32m"password"[39m
+            [33mmargin[39m=[32m"normal"[39m
+            [33mname[39m=[32m"password"[39m
+            [33mplaceholder[39m=[32m"Password"[39m
+            [33mrequired[39m=[32m""[39m
+            [33mtype[39m=[32m"password"[39m
+            [33mvalue[39m=[32m"password123"[39m
+          [36m/>[39m
+          [36m<button[39m
+            [33msx[39m=[32m"[object Object]"[39m
+            [33mtype[39m=[32m"submit"[39m
+            [33mvariant[39m=[32m"contained"[39m
+          [36m>[39m
+            [0mSign In[0m
+          [36m</button>[39m
+          [36m<div[39m
+            [33msx[39m=[32m"[object Object]"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mvariant[39m=[32m"body2"[39m
+            [36m>[39m
+              [0mDon't have an account?[0m
+              [0m [0m
+              [36m<a[39m
+                [33mclass[39m=[32m"MuiTypography-root MuiTypography-body2 MuiLink-root MuiLink-underlineAlways css-101ca9i-MuiTypography-root-MuiLink-root"[39m
+                [33mhref[39m=[32m"/register"[39m
+              [36m>[39m
+                [0mSign up here[0m
+              [36m</a>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+   ❯ src/tests/integration/GameManagementFlow.test.tsx > Game Management Flow Integration Tests > Complete Game Management Flow > should handle errors in game management flow
+     → Found multiple elements with the text: /sign in/i
+
+Here are the matching elements:
+
+Ignored nodes: comments, script, style
+[36m<div[39m
+  [33mcomponent[39m=[32m"h1"[39m
+  [33mvariant[39m=[32m"h5"[39m
+[36m>[39m
+  [0mSign in[0m
+[36m</div>[39m
+
+Ignored nodes: comments, script, style
+[36m<button[39m
+  [33msx[39m=[32m"[object Object]"[39m
+  [33mtype[39m=[32m"submit"[39m
+  [33mvariant[39m=[32m"contained"[39m
+[36m>[39m
+  [0mSign In[0m
+[36m</button>[39m
+
+(If this is intentional, then use the `*AllBy*` variant of the query (like `queryAllByText`, `getAllByText`, or `findAllByText`)).
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mcomponent[39m=[32m"main"[39m
+      [33mmaxwidth[39m=[32m"xs"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33msx[39m=[32m"[object Object]"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mcomponent[39m=[32m"h1"[39m
+          [33mvariant[39m=[32m"h5"[39m
+        [36m>[39m
+          [0mSign in[0m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mcomponent[39m=[32m"form"[39m
+          [33mnovalidate[39m=[32m""[39m
+          [33msx[39m=[32m"[object Object]"[39m
+        [36m>[39m
+          [36m<input[39m
+            [33mautocomplete[39m=[32m"email"[39m
+            [33mid[39m=[32m"email"[39m
+            [33mmargin[39m=[32m"normal"[39m
+            [33mname[39m=[32m"email"[39m
+            [33mplaceholder[39m=[32m"Email Address"[39m
+            [33mrequired[39m=[32m""[39m
+            [33mvalue[39m=[32m"test@example.com"[39m
+          [36m/>[39m
+          [36m<input[39m
+            [33mautocomplete[39m=[32m"current-password"[39m
+            [33mid[39m=[32m"password"[39m
+            [33mmargin[39m=[32m"normal"[39m
+            [33mname[39m=[32m"password"[39m
+            [33mplaceholder[39m=[32m"Password"[39m
+            [33mrequired[39m=[32m""[39m
+            [33mtype[39m=[32m"password"[39m
+            [33mvalue[39m=[32m"password123"[39m
+          [36m/>[39m
+          [36m<button[39m
+            [33msx[39m=[32m"[object Object]"[39m
+            [33mtype[39m=[32m"submit"[39m
+            [33mvariant[39m=[32m"contained"[39m
+          [36m>[39m
+            [0mSign In[0m
+          [36m</button>[39m
+          [36m<div[39m
+            [33msx[39m=[32m"[object Object]"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mvariant[39m=[32m"body2"[39m
+            [36m>[39m
+              [0mDon't have an account?[0m
+              [0m [0m
+              [36m<a[39m
+                [33mclass[39m=[32m"MuiTypography-root MuiTypography-body2 MuiLink-root MuiLink-underlineAlways css-101ca9i-MuiTypography-root-MuiLink-root"[39m
+                [33mhref[39m=[32m"/register"[39m
+              [36m>[39m
+                [0mSign up here[0m
+              [36m</a>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+   ❯ src/tests/integration/GameManagementFlow.test.tsx > Game Management Flow Integration Tests > Game Series Management > should allow users to view and edit game series
+     → Found multiple elements with the text: /sign in/i
+
+Here are the matching elements:
+
+Ignored nodes: comments, script, style
+[36m<div[39m
+  [33mcomponent[39m=[32m"h1"[39m
+  [33mvariant[39m=[32m"h5"[39m
+[36m>[39m
+  [0mSign in[0m
+[36m</div>[39m
+
+Ignored nodes: comments, script, style
+[36m<button[39m
+  [33msx[39m=[32m"[object Object]"[39m
+  [33mtype[39m=[32m"submit"[39m
+  [33mvariant[39m=[32m"contained"[39m
+[36m>[39m
+  [0mSign In[0m
+[36m</button>[39m
+
+(If this is intentional, then use the `*AllBy*` variant of the query (like `queryAllByText`, `getAllByText`, or `findAllByText`)).
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mcomponent[39m=[32m"main"[39m
+      [33mmaxwidth[39m=[32m"xs"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33msx[39m=[32m"[object Object]"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mcomponent[39m=[32m"h1"[39m
+          [33mvariant[39m=[32m"h5"[39m
+        [36m>[39m
+          [0mSign in[0m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mcomponent[39m=[32m"form"[39m
+          [33mnovalidate[39m=[32m""[39m
+          [33msx[39m=[32m"[object Object]"[39m
+        [36m>[39m
+          [36m<input[39m
+            [33mautocomplete[39m=[32m"email"[39m
+            [33mid[39m=[32m"email"[39m
+            [33mmargin[39m=[32m"normal"[39m
+            [33mname[39m=[32m"email"[39m
+            [33mplaceholder[39m=[32m"Email Address"[39m
+            [33mrequired[39m=[32m""[39m
+            [33mvalue[39m=[32m"test@example.com"[39m
+          [36m/>[39m
+          [36m<input[39m
+            [33mautocomplete[39m=[32m"current-password"[39m
+            [33mid[39m=[32m"password"[39m
+            [33mmargin[39m=[32m"normal"[39m
+            [33mname[39m=[32m"password"[39m
+            [33mplaceholder[39m=[32m"Password"[39m
+            [33mrequired[39m=[32m""[39m
+            [33mtype[39m=[32m"password"[39m
+            [33mvalue[39m=[32m"password123"[39m
+          [36m/>[39m
+          [36m<button[39m
+            [33msx[39m=[32m"[object Object]"[39m
+            [33mtype[39m=[32m"submit"[39m
+            [33mvariant[39m=[32m"contained"[39m
+          [36m>[39m
+            [0mSign In[0m
+          [36m</button>[39m
+          [36m<div[39m
+            [33msx[39m=[32m"[object Object]"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mvariant[39m=[32m"body2"[39m
+            [36m>[39m
+              [0mDon't have an account?[0m
+              [0m [0m
+              [36m<a[39m
+                [33mclass[39m=[32m"MuiTypography-root MuiTypography-body2 MuiLink-root MuiLink-underlineAlways css-101ca9i-MuiTypography-root-MuiLink-root"[39m
+                [33mhref[39m=[32m"/register"[39m
+              [36m>[39m
+                [0mSign up here[0m
+              [36m</a>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+   ❯ src/tests/integration/GameManagementFlow.test.tsx > Game Management Flow Integration Tests > Game Management > should allow users to manage individual games
+     → Found multiple elements with the text: /sign in/i
+
+Here are the matching elements:
+
+Ignored nodes: comments, script, style
+[36m<div[39m
+  [33mcomponent[39m=[32m"h1"[39m
+  [33mvariant[39m=[32m"h5"[39m
+[36m>[39m
+  [0mSign in[0m
+[36m</div>[39m
+
+Ignored nodes: comments, script, style
+[36m<button[39m
+  [33msx[39m=[32m"[object Object]"[39m
+  [33mtype[39m=[32m"submit"[39m
+  [33mvariant[39m=[32m"contained"[39m
+[36m>[39m
+  [0mSign In[0m
+[36m</button>[39m
+
+(If this is intentional, then use the `*AllBy*` variant of the query (like `queryAllByText`, `getAllByText`, or `findAllByText`)).
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mcomponent[39m=[32m"main"[39m
+      [33mmaxwidth[39m=[32m"xs"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33msx[39m=[32m"[object Object]"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mcomponent[39m=[32m"h1"[39m
+          [33mvariant[39m=[32m"h5"[39m
+        [36m>[39m
+          [0mSign in[0m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mcomponent[39m=[32m"form"[39m
+          [33mnovalidate[39m=[32m""[39m
+          [33msx[39m=[32m"[object Object]"[39m
+        [36m>[39m
+          [36m<input[39m
+            [33mautocomplete[39m=[32m"email"[39m
+            [33mid[39m=[32m"email"[39m
+            [33mmargin[39m=[32m"normal"[39m
+            [33mname[39m=[32m"email"[39m
+            [33mplaceholder[39m=[32m"Email Address"[39m
+            [33mrequired[39m=[32m""[39m
+            [33mvalue[39m=[32m"test@example.com"[39m
+          [36m/>[39m
+          [36m<input[39m
+            [33mautocomplete[39m=[32m"current-password"[39m
+            [33mid[39m=[32m"password"[39m
+            [33mmargin[39m=[32m"normal"[39m
+            [33mname[39m=[32m"password"[39m
+            [33mplaceholder[39m=[32m"Password"[39m
+            [33mrequired[39m=[32m""[39m
+            [33mtype[39m=[32m"password"[39m
+            [33mvalue[39m=[32m"password123"[39m
+          [36m/>[39m
+          [36m<button[39m
+            [33msx[39m=[32m"[object Object]"[39m
+            [33mtype[39m=[32m"submit"[39m
+            [33mvariant[39m=[32m"contained"[39m
+          [36m>[39m
+            [0mSign In[0m
+          [36m</button>[39m
+          [36m<div[39m
+            [33msx[39m=[32m"[object Object]"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mvariant[39m=[32m"body2"[39m
+            [36m>[39m
+              [0mDon't have an account?[0m
+              [0m [0m
+              [36m<a[39m
+                [33mclass[39m=[32m"MuiTypography-root MuiTypography-body2 MuiLink-root MuiLink-underlineAlways css-101ca9i-MuiTypography-root-MuiLink-root"[39m
+                [33mhref[39m=[32m"/register"[39m
+              [36m>[39m
+                [0mSign up here[0m
+              [36m</a>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+   ❯ src/tests/integration/GameManagementFlow.test.tsx > Game Management Flow Integration Tests > Data Validation > should validate form inputs in game management
+     → Found multiple elements with the text: /sign in/i
+
+Here are the matching elements:
+
+Ignored nodes: comments, script, style
+[36m<div[39m
+  [33mcomponent[39m=[32m"h1"[39m
+  [33mvariant[39m=[32m"h5"[39m
+[36m>[39m
+  [0mSign in[0m
+[36m</div>[39m
+
+Ignored nodes: comments, script, style
+[36m<button[39m
+  [33msx[39m=[32m"[object Object]"[39m
+  [33mtype[39m=[32m"submit"[39m
+  [33mvariant[39m=[32m"contained"[39m
+[36m>[39m
+  [0mSign In[0m
+[36m</button>[39m
+
+(If this is intentional, then use the `*AllBy*` variant of the query (like `queryAllByText`, `getAllByText`, or `findAllByText`)).
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mcomponent[39m=[32m"main"[39m
+      [33mmaxwidth[39m=[32m"xs"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33msx[39m=[32m"[object Object]"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mcomponent[39m=[32m"h1"[39m
+          [33mvariant[39m=[32m"h5"[39m
+        [36m>[39m
+          [0mSign in[0m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mcomponent[39m=[32m"form"[39m
+          [33mnovalidate[39m=[32m""[39m
+          [33msx[39m=[32m"[object Object]"[39m
+        [36m>[39m
+          [36m<input[39m
+            [33mautocomplete[39m=[32m"email"[39m
+            [33mid[39m=[32m"email"[39m
+            [33mmargin[39m=[32m"normal"[39m
+            [33mname[39m=[32m"email"[39m
+            [33mplaceholder[39m=[32m"Email Address"[39m
+            [33mrequired[39m=[32m""[39m
+            [33mvalue[39m=[32m"test@example.com"[39m
+          [36m/>[39m
+          [36m<input[39m
+            [33mautocomplete[39m=[32m"current-password"[39m
+            [33mid[39m=[32m"password"[39m
+            [33mmargin[39m=[32m"normal"[39m
+            [33mname[39m=[32m"password"[39m
+            [33mplaceholder[39m=[32m"Password"[39m
+            [33mrequired[39m=[32m""[39m
+            [33mtype[39m=[32m"password"[39m
+            [33mvalue[39m=[32m"password123"[39m
+          [36m/>[39m
+          [36m<button[39m
+            [33msx[39m=[32m"[object Object]"[39m
+            [33mtype[39m=[32m"submit"[39m
+            [33mvariant[39m=[32m"contained"[39m
+          [36m>[39m
+            [0mSign In[0m
+          [36m</button>[39m
+          [36m<div[39m
+            [33msx[39m=[32m"[object Object]"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mvariant[39m=[32m"body2"[39m
+            [36m>[39m
+              [0mDon't have an account?[0m
+              [0m [0m
+              [36m<a[39m
+                [33mclass[39m=[32m"MuiTypography-root MuiTypography-body2 MuiLink-root MuiLink-underlineAlways css-101ca9i-MuiTypography-root-MuiLink-root"[39m
+                [33mhref[39m=[32m"/register"[39m
+              [36m>[39m
+                [0mSign up here[0m
+              [36m</a>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+
+⎯⎯⎯⎯⎯⎯ Unhandled Errors ⎯⎯⎯⎯⎯⎯
+
+Vitest caught 2 unhandled errors during the test run.
+This might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+ Test Files  4 failed | 2 passed (6)
+      Tests  18 failed | 28 passed (46)
+     Errors  2 errors
+   Start at  12:22:36
+   Duration  7.95s (transform 453ms, setup 2.51s, collect 10.96s, tests 2.92s, environment 3.86s, prepare 592ms)
+
