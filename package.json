@@ -4,6 +4,7 @@
     "@types/nodemailer": "^6.4.17"
   },
   "dependencies": {
-    "@mui/icons-material": "^7.1.1"
+    "@mui/icons-material": "^7.1.1",
+    "puppeteer": "^24.10.2"
   }
 }

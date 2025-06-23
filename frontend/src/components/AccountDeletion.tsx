@@ -24,6 +24,7 @@ import {
 } from "@mui/icons-material";
 import { deleteAccount } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
+import { useI18n } from "../contexts/I18nContext";
 import { useNavigate } from "react-router-dom";
 
 export const AccountDeletion = () => {
@@ -36,6 +37,7 @@ export const AccountDeletion = () => {
   const [success, setSuccess] = useState<string>("");
 
   const { logout } = useAuth();
+  const { t } = useI18n();
   const navigate = useNavigate();
 
   const handleDeleteClick = () => {
@@ -44,7 +46,7 @@ export const AccountDeletion = () => {
 
   const handleConfirmDelete = () => {
     if (!password.trim()) {
-      setError("Password is required");
+      setError(t("accountDeletion.passwordRequired"));
       return;
     }
     setIsDialogOpen(false);
@@ -59,7 +61,7 @@ export const AccountDeletion = () => {
 
       await deleteAccount(password);
 
-      setSuccess("Account deleted successfully");
+      setSuccess(t("accountDeletion.success"));
 
       // Clear local storage and redirect after a short delay
       setTimeout(() => {
@@ -67,7 +69,7 @@ export const AccountDeletion = () => {
         navigate("/login");
       }, 2000);
     } catch (err: any) {
-      setError(err.response?.data?.message || "Failed to delete account");
+      setError(err.response?.data?.message || t("accountDeletion.error"));
       setIsConfirmDialogOpen(false);
     } finally {
       setLoading(false);
@@ -92,19 +94,16 @@ export const AccountDeletion = () => {
         <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
           <Warning sx={{ color: "#ff6b6b", mr: 1 }} />
           <Typography variant="h6" color="error">
-            Danger Zone
+            {t("accountDeletion.dangerZone")}
           </Typography>
         </Box>
 
         <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-          Once you delete your account, there is no going back. Please be
-          certain.
+          {t("accountDeletion.description")}
         </Typography>
 
         <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-          This action will permanently delete your account and all associated
-          data including: • Your profile information • Profile picture • Game
-          history and statistics • Team memberships
+          {t("accountDeletion.warning")}
         </Typography>
 
         <Button
@@ -114,7 +113,7 @@ export const AccountDeletion = () => {
           onClick={handleDeleteClick}
           sx={{ borderColor: "#ff6b6b", color: "#ff6b6b" }}
         >
-          Delete Account
+          {t("accountDeletion.deleteButton")}
         </Button>
       </Paper>
 
@@ -128,13 +127,12 @@ export const AccountDeletion = () => {
         <DialogTitle>
           <Box sx={{ display: "flex", alignItems: "center" }}>
             <Warning sx={{ color: "#ff6b6b", mr: 1 }} />
-            Confirm Account Deletion
+            {t("accountDeletion.title")}
           </Box>
         </DialogTitle>
         <DialogContent>
           <Typography variant="body1" sx={{ mb: 2 }}>
-            To delete your account, please enter your password to confirm this
-            action.
+            {t("accountDeletion.confirmPasswordMessage")}
           </Typography>
 
           {error && (
@@ -145,7 +143,7 @@ export const AccountDeletion = () => {
 
           <TextField
             fullWidth
-            label="Password"
+            label={t("auth.password")}
             type={showPassword ? "text" : "password"}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -167,14 +165,16 @@ export const AccountDeletion = () => {
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCancel}>Cancel</Button>
+          <Button onClick={handleCancel}>
+            {t("accountDeletion.cancelButton")}
+          </Button>
           <Button
             onClick={handleConfirmDelete}
             variant="contained"
             color="error"
             disabled={!password.trim()}
           >
-            Continue
+            {t("accountDeletion.continue")}
           </Button>
         </DialogActions>
       </Dialog>
@@ -189,16 +189,16 @@ export const AccountDeletion = () => {
         <DialogTitle>
           <Box sx={{ display: "flex", alignItems: "center" }}>
             <Warning sx={{ color: "#ff6b6b", mr: 1 }} />
-            Final Confirmation
+            {t("accountDeletion.finalConfirmation")}
           </Box>
         </DialogTitle>
         <DialogContent>
           <Alert severity="warning" sx={{ mb: 2 }}>
             <Typography variant="body1" sx={{ fontWeight: "bold" }}>
-              This action cannot be undone!
+              {t("accountDeletion.irreversibleWarning")}
             </Typography>
             <Typography variant="body2">
-              Your account and all associated data will be permanently deleted.
+              {t("accountDeletion.permanentDeletion")}
             </Typography>
           </Alert>
 
@@ -209,12 +209,12 @@ export const AccountDeletion = () => {
           )}
 
           <Typography variant="body1" sx={{ mb: 2 }}>
-            Are you absolutely sure you want to delete your account?
+            {t("accountDeletion.finalQuestion")}
           </Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCancel} disabled={loading}>
-            Cancel
+            {t("accountDeletion.cancelButton")}
           </Button>
           <Button
             onClick={handleFinalDelete}
@@ -223,7 +223,9 @@ export const AccountDeletion = () => {
             disabled={loading}
             startIcon={loading ? <CircularProgress size={16} /> : <Delete />}
           >
-            {loading ? "Deleting..." : "Yes, Delete My Account"}
+            {loading
+              ? t("accountDeletion.deleting")
+              : t("accountDeletion.confirmDelete")}
           </Button>
         </DialogActions>
       </Dialog>

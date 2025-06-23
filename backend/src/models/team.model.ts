@@ -16,6 +16,10 @@ export interface TeamMember {
     role: 'admin' | 'captain' | 'player' | 'snack_provider';
     created_at: Date;
     updated_at: Date;
+    // User information
+    username?: string;
+    email?: string;
+    profile_picture_url?: string;
 }
 
 export class TeamModel {
@@ -130,7 +134,7 @@ export class TeamModel {
     static async getTeamMembers(teamId: number): Promise<TeamMember[]> {
         const [rows] = await pool.execute(
             `SELECT tm.id, tm.team_id, tm.user_id, tm.role, tm.created_at, tm.updated_at,
-                    u.username, u.email
+                    u.username, u.email, u.profile_picture_url
              FROM TEAM_MEMBERS tm
              JOIN USERS u ON tm.user_id = u.id
              WHERE tm.team_id = ?`,
@@ -143,7 +147,10 @@ export class TeamModel {
             user_id: row.user_id,
             role: row.role,
             created_at: row.created_at,
-            updated_at: row.updated_at
+            updated_at: row.updated_at,
+            username: row.username,
+            email: row.email,
+            profile_picture_url: row.profile_picture_url
         }));
     }
 
@@ -182,5 +189,40 @@ export class TeamModel {
         );
 
         return (rows as any[]).length > 0;
+    }
+
+    static async getTeamStats(teamId: number): Promise<{
+        totalMembers: number;
+        admins: number;
+        captains: number;
+        players: number;
+        snackProviders: number;
+        createdAt: Date;
+        lastActivity: Date;
+    }> {
+        const [memberRows] = await pool.execute(
+            `SELECT role, created_at FROM TEAM_MEMBERS WHERE team_id = ?`,
+            [teamId]
+        );
+
+        const [teamRows] = await pool.execute(
+            `SELECT created_at, updated_at FROM TEAMS WHERE id = ?`,
+            [teamId]
+        );
+
+        const members = memberRows as any[];
+        const team = (teamRows as any[])[0];
+
+        const stats = {
+            totalMembers: members.length,
+            admins: members.filter(m => m.role === 'admin').length,
+            captains: members.filter(m => m.role === 'captain').length,
+            players: members.filter(m => m.role === 'player').length,
+            snackProviders: members.filter(m => m.role === 'snack_provider').length,
+            createdAt: team.created_at,
+            lastActivity: team.updated_at
+        };
+
+        return stats;
     }
 } 

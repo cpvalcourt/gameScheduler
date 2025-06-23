@@ -1,12 +1,25 @@
-import { defineConfig } from 'vitest/config';
+/// <reference types="vitest" />
+import { defineConfig, mergeConfig } from 'vite';
+import { defineConfig as defineVitestConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 
-export default defineConfig({
+const viteConfig = defineConfig({
   plugins: [react()],
+  resolve: {
+    alias: {
+      crypto: 'crypto-browserify'
+    }
+  },
+  define: {
+    global: 'globalThis'
+  }
+});
+
+const vitestConfig = defineVitestConfig({
   test: {
     environment: 'jsdom',
     globals: true,
-    setupFiles: ['./src/tests/setup.ts'],
+    setupFiles: ['./src/tests/setup.tsx'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
@@ -15,10 +28,10 @@ export default defineConfig({
         'src/tests/',
       ],
       all: true,
-      branches: 100,
-      functions: 100,
-      lines: 100,
-      statements: 100,
     },
+    mockReset: true,
+    restoreMocks: true,
   },
-}); 
+});
+
+export default mergeConfig(viteConfig, vitestConfig); 

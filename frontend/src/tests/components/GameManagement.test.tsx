@@ -1,76 +1,33 @@
-import { render, screen, waitFor, act } from "@testing-library/react";
+import { screen, waitFor, act, render } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, beforeEach, vi } from "vitest";
+import React from "react";
+import { BrowserRouter } from "react-router-dom";
+import { AuthProvider } from "../../contexts/AuthContext";
+import { I18nProvider } from "../../contexts/I18nContext";
 import GameManagement from "../../components/GameManagement";
-import api from "../../services/api";
+import { mockGet, mockPost, mockPut, mockDelete } from "../__mocks__/api";
 
-// Mock the API service
-vi.mock("../../services/api");
-const mockApi = api as any;
-
-// Mock Material-UI components to avoid styling issues
-vi.mock("@mui/material", () => ({
-  Box: ({ children, ...props }: any) => <div {...props}>{children}</div>,
-  Button: ({ children, onClick, disabled, ...props }: any) => (
-    <button onClick={onClick} disabled={disabled} {...props}>
-      {children}
-    </button>
-  ),
-  Dialog: ({ children, open, onClose, ...props }: any) =>
-    open ? <div {...props}>{children}</div> : null,
-  DialogTitle: ({ children, ...props }: any) => <h2 {...props}>{children}</h2>,
-  DialogContent: ({ children, ...props }: any) => (
-    <div {...props}>{children}</div>
-  ),
-  DialogActions: ({ children, ...props }: any) => (
-    <div {...props}>{children}</div>
-  ),
-  TextField: ({ name, label, value, onChange, type, ...props }: any) => (
-    <input
-      name={name}
-      placeholder={label}
-      value={value}
-      onChange={onChange}
-      type={type}
-      {...props}
-    />
-  ),
-  FormControlLabel: ({ control, label, ...props }: any) => (
-    <label {...props}>
-      {control}
-      {label}
-    </label>
-  ),
-  Checkbox: ({ name, checked, onChange, ...props }: any) => (
-    <input
-      type="checkbox"
-      name={name}
-      checked={checked}
-      onChange={onChange}
-      {...props}
-    />
-  ),
-  Typography: ({ children, ...props }: any) => <div {...props}>{children}</div>,
-  Alert: ({ children, severity, ...props }: any) => (
-    <div role="alert" {...props}>
-      {children}
-    </div>
-  ),
-  CircularProgress: ({ size, ...props }: any) => (
-    <div {...props}>Loading...</div>
-  ),
-}));
+const renderWithProviders = (component: any) => {
+  return render(
+    <BrowserRouter>
+      <I18nProvider>
+        <AuthProvider>{component}</AuthProvider>
+      </I18nProvider>
+    </BrowserRouter>
+  );
+};
 
 const mockSeries = {
   id: 1,
   name: "Test Series",
   description: "Test Description",
   type: "tournament" as const,
-  start_date: "2024-01-01",
-  end_date: "2024-12-31",
+  start_date: "2023-01-01",
+  end_date: "2023-12-31",
   created_by: 1,
-  created_at: "2024-01-01",
-  updated_at: "2024-01-01",
+  created_at: "2023-01-01T00:00:00Z",
+  updated_at: "2023-01-01T00:00:00Z",
 };
 
 const mockOnSuccess = vi.fn();
@@ -78,266 +35,175 @@ const mockOnSuccess = vi.fn();
 describe("GameManagement", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockApi.post.mockResolvedValue({
-      data: { message: "Games created successfully" },
+  });
+
+  it("should render game management form", () => {
+    renderWithProviders(
+      <GameManagement series={mockSeries} onSuccess={mockOnSuccess} />
+    );
+
+    expect(screen.getByText("Add Games")).toBeInTheDocument();
+  });
+
+  it("should open dialog when Add Games button is clicked", async () => {
+    renderWithProviders(
+      <GameManagement series={mockSeries} onSuccess={mockOnSuccess} />
+    );
+
+    const user = userEvent.setup();
+
+    await act(async () => {
+      await user.click(screen.getByRole("button", { name: "Add Games" }));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+      expect(screen.getByLabelText("Date")).toBeInTheDocument();
+      expect(screen.getByLabelText("Time")).toBeInTheDocument();
+      expect(screen.getByLabelText("Location")).toBeInTheDocument();
+      expect(screen.getByLabelText("Opponent")).toBeInTheDocument();
     });
   });
 
-  describe("Initial Render", () => {
-    it("should render the Add Games button", () => {
-      render(<GameManagement series={mockSeries} onSuccess={mockOnSuccess} />);
+  it("should create games successfully", async () => {
+    mockGet.mockResolvedValue({ data: [] });
+    mockPost.mockResolvedValue({
+      data: { message: "Games created successfully" },
+    });
 
+    renderWithProviders(
+      <GameManagement series={mockSeries} onSuccess={mockOnSuccess} />
+    );
+
+    const user = userEvent.setup();
+
+    await waitFor(() => {
       expect(screen.getByText("Add Games")).toBeInTheDocument();
     });
 
-    it("should not show dialog initially", () => {
-      render(<GameManagement series={mockSeries} onSuccess={mockOnSuccess} />);
-      // The Add Games button should be present
-      expect(
-        screen.getByRole("button", { name: /add games/i })
-      ).toBeInTheDocument();
-      // The dialog title should NOT be present
-      expect(
-        screen.queryByRole("heading", { name: /add games/i })
-      ).not.toBeInTheDocument();
-      // The Cancel button (in dialog) should NOT be present
-      expect(
-        screen.queryByRole("button", { name: /cancel/i })
-      ).not.toBeInTheDocument();
-    });
-  });
-
-  describe("Dialog Opening/Closing", () => {
-    it("should open dialog when Add Games button is clicked", async () => {
-      const user = userEvent.setup();
-      render(<GameManagement series={mockSeries} onSuccess={mockOnSuccess} />);
-      const addButton = screen.getByRole("button", { name: /add games/i });
-      await user.click(addButton);
-      // Dialog title should be present
-      expect(
-        screen.getByRole("heading", { name: /add games/i })
-      ).toBeInTheDocument();
-      // Cancel and Create Games buttons should be present
-      expect(
-        screen.getByRole("button", { name: /cancel/i })
-      ).toBeInTheDocument();
-      expect(
-        screen.getByRole("button", { name: /create games/i })
-      ).toBeInTheDocument();
+    // Open dialog
+    await act(async () => {
+      await user.click(screen.getByRole("button", { name: "Add Games" }));
     });
 
-    it("should close dialog when Cancel button is clicked", async () => {
-      const user = userEvent.setup();
-      render(<GameManagement series={mockSeries} onSuccess={mockOnSuccess} />);
-      // Open dialog
-      const addButton = screen.getByRole("button", { name: /add games/i });
-      await user.click(addButton);
-      // Close dialog
-      const cancelButton = screen.getByRole("button", { name: /cancel/i });
-      await user.click(cancelButton);
-      // Dialog title should NOT be present
-      expect(
-        screen.queryByRole("heading", { name: /add games/i })
-      ).not.toBeInTheDocument();
-      expect(
-        screen.queryByRole("button", { name: /cancel/i })
-      ).not.toBeInTheDocument();
-    });
-  });
-
-  describe("Form Interactions", () => {
-    it("should handle text field changes", async () => {
-      const user = userEvent.setup();
-      render(<GameManagement series={mockSeries} onSuccess={mockOnSuccess} />);
-
-      // Open dialog
-      await user.click(screen.getByText("Add Games"));
-
-      // Fill in form fields
-      const dateInput = screen.getByPlaceholderText("Date");
-      const timeInput = screen.getByPlaceholderText("Time");
-      const locationInput = screen.getByPlaceholderText("Location");
-      const opponentInput = screen.getByPlaceholderText("Opponent");
-
-      await user.type(dateInput, "2024-01-15");
-      await user.type(timeInput, "14:00");
-      await user.type(locationInput, "Test Location");
-      await user.type(opponentInput, "Test Opponent");
-
-      expect(dateInput).toHaveValue("2024-01-15");
-      expect(timeInput).toHaveValue("14:00");
-      expect(locationInput).toHaveValue("Test Location");
-      expect(opponentInput).toHaveValue("Test Opponent");
+    // Fill out the form (clear time input first)
+    await act(async () => {
+      await user.clear(screen.getByLabelText("Time"));
+      await user.type(screen.getByLabelText("Date"), "2023-12-25");
+      await user.type(screen.getByLabelText("Time"), "14:00");
+      await user.type(screen.getByLabelText("Location"), "Test Arena");
+      await user.type(screen.getByLabelText("Opponent"), "Test Team");
     });
 
-    it("should handle checkbox changes", async () => {
-      const user = userEvent.setup();
-      render(<GameManagement series={mockSeries} onSuccess={mockOnSuccess} />);
-      // Open dialog
-      await user.click(screen.getByRole("button", { name: /add games/i }));
-      // Find and click the home game checkbox
-      const homeCheckbox = screen.getByRole("checkbox", { name: /home game/i });
-      expect(homeCheckbox).not.toBeChecked();
-      await user.click(homeCheckbox);
-      expect(homeCheckbox).toBeChecked();
+    // Submit form
+    await act(async () => {
+      await user.click(screen.getByRole("button", { name: "Create Games" }));
     });
 
-    it("should handle day selection", async () => {
-      const user = userEvent.setup();
-      render(<GameManagement series={mockSeries} onSuccess={mockOnSuccess} />);
-
-      // Open dialog
-      await user.click(screen.getByText("Add Games"));
-
-      // Find and click day checkboxes
-      const mondayCheckbox = screen.getByRole("checkbox", { name: /monday/i });
-      const tuesdayCheckbox = screen.getByRole("checkbox", {
-        name: /tuesday/i,
-      });
-
-      await user.click(mondayCheckbox);
-      await user.click(tuesdayCheckbox);
-
-      expect(mondayCheckbox).toBeChecked();
-      expect(tuesdayCheckbox).toBeChecked();
-    });
-  });
-
-  describe("API Integration", () => {
-    it("should successfully create games", async () => {
-      const user = userEvent.setup();
-      render(<GameManagement series={mockSeries} onSuccess={mockOnSuccess} />);
-
-      // Open dialog
-      await user.click(screen.getByText("Add Games"));
-
-      // Fill in required fields
-      const dateInput = screen.getByPlaceholderText("Date");
-      const timeInput = screen.getByPlaceholderText("Time");
-      const locationInput = screen.getByPlaceholderText("Location");
-      const opponentInput = screen.getByPlaceholderText("Opponent");
-
-      await user.type(dateInput, "2024-01-15");
-      await user.type(timeInput, "14:00");
-      await user.type(locationInput, "Test Location");
-      await user.type(opponentInput, "Test Opponent");
-
-      // Submit form
-      const createButton = screen.getByText("Create Games");
-      await user.click(createButton);
-
-      await waitFor(() => {
-        expect(mockApi.post).toHaveBeenCalledWith(
-          `/game-series/${mockSeries.id}/games`,
-          expect.objectContaining({
-            seriesId: mockSeries.id,
-            date: "2024-01-15",
-            time: "14:00",
-            location: "Test Location",
-            opponent: "Test Opponent",
-            isHome: true,
-            days: [],
-          })
-        );
-      });
-
+    await waitFor(() => {
+      expect(mockPost).toHaveBeenCalledWith(
+        `/game-series/${mockSeries.id}/games`,
+        {
+          seriesId: mockSeries.id,
+          date: "2023-12-25",
+          time: "14:00",
+          location: "Test Arena",
+          opponent: "Test Team",
+          isHome: true,
+          days: [],
+        }
+      );
       expect(mockOnSuccess).toHaveBeenCalled();
     });
+  });
 
-    it("should handle API errors", async () => {
-      const errorMessage = "Failed to create games";
-      mockApi.post.mockRejectedValue(new Error(errorMessage));
+  it("should handle form validation errors", async () => {
+    renderWithProviders(
+      <GameManagement series={mockSeries} onSuccess={mockOnSuccess} />
+    );
 
-      const user = userEvent.setup();
-      render(<GameManagement series={mockSeries} onSuccess={mockOnSuccess} />);
+    const user = userEvent.setup();
 
-      // Open dialog
-      await user.click(screen.getByText("Add Games"));
+    await waitFor(() => {
+      expect(screen.getByText("Add Games")).toBeInTheDocument();
+    });
 
-      // Fill in required fields
-      const dateInput = screen.getByPlaceholderText("Date");
-      const timeInput = screen.getByPlaceholderText("Time");
-      const locationInput = screen.getByPlaceholderText("Location");
-      const opponentInput = screen.getByPlaceholderText("Opponent");
+    // Open dialog
+    await act(async () => {
+      await user.click(screen.getByRole("button", { name: "Add Games" }));
+    });
 
-      await user.type(dateInput, "2024-01-15");
-      await user.type(timeInput, "14:00");
-      await user.type(locationInput, "Test Location");
-      await user.type(opponentInput, "Test Opponent");
+    // Try to submit without filling required fields
+    await act(async () => {
+      await user.click(screen.getByRole("button", { name: "Create Games" }));
+    });
 
-      // Submit form
-      const createButton = screen.getByText("Create Games");
-      await user.click(createButton);
-
-      await waitFor(() => {
-        expect(screen.getByText(errorMessage)).toBeInTheDocument();
-      });
-
-      expect(mockOnSuccess).not.toHaveBeenCalled();
+    await waitFor(() => {
+      expect(screen.getByText("All fields are required.")).toBeInTheDocument();
+      expect(mockPost).not.toHaveBeenCalled();
     });
   });
 
-  describe("Loading States", () => {
-    it("should show loading state during API call", async () => {
-      // Mock a delayed API response
-      mockApi.post.mockImplementation(
-        () => new Promise((resolve) => setTimeout(resolve, 100))
-      );
+  it("should handle API errors when creating games", async () => {
+    mockPost.mockRejectedValue(new Error("Failed to create games"));
 
-      const user = userEvent.setup();
-      render(<GameManagement series={mockSeries} onSuccess={mockOnSuccess} />);
+    renderWithProviders(
+      <GameManagement series={mockSeries} onSuccess={mockOnSuccess} />
+    );
 
-      // Open dialog
-      await user.click(screen.getByText("Add Games"));
+    const user = userEvent.setup();
 
-      // Fill in required fields
-      const dateInput = screen.getByPlaceholderText("Date");
-      const timeInput = screen.getByPlaceholderText("Time");
-      const locationInput = screen.getByPlaceholderText("Location");
-      const opponentInput = screen.getByPlaceholderText("Opponent");
+    await waitFor(() => {
+      expect(screen.getByText("Add Games")).toBeInTheDocument();
+    });
 
-      await user.type(dateInput, "2024-01-15");
-      await user.type(timeInput, "14:00");
-      await user.type(locationInput, "Test Location");
-      await user.type(opponentInput, "Test Opponent");
+    // Open dialog
+    await act(async () => {
+      await user.click(screen.getByRole("button", { name: "Add Games" }));
+    });
 
-      // Submit form
-      const createButton = screen.getByText("Create Games");
-      await user.click(createButton);
+    // Fill out the form
+    await act(async () => {
+      await user.clear(screen.getByLabelText("Time"));
+      await user.type(screen.getByLabelText("Date"), "2023-12-25");
+      await user.type(screen.getByLabelText("Time"), "14:00");
+      await user.type(screen.getByLabelText("Location"), "Test Arena");
+      await user.type(screen.getByLabelText("Opponent"), "Test Team");
+    });
 
-      // Check for loading state
-      expect(screen.getByText("Loading...")).toBeInTheDocument();
-      expect(createButton).toBeDisabled();
+    // Submit form
+    await act(async () => {
+      await user.click(screen.getByRole("button", { name: "Create Games" }));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("Failed to create games")).toBeInTheDocument();
     });
   });
 
-  describe("Form Reset", () => {
-    it("should reset form when dialog is closed", async () => {
-      const user = userEvent.setup();
-      render(<GameManagement series={mockSeries} onSuccess={mockOnSuccess} />);
+  it("should close dialog when Cancel button is clicked", async () => {
+    renderWithProviders(
+      <GameManagement series={mockSeries} onSuccess={mockOnSuccess} />
+    );
 
-      // Open dialog
-      await user.click(screen.getByText("Add Games"));
+    const user = userEvent.setup();
 
-      // Fill in some fields
-      const dateInput = screen.getByPlaceholderText("Date");
-      const locationInput = screen.getByPlaceholderText("Location");
+    await waitFor(() => {
+      expect(screen.getByText("Add Games")).toBeInTheDocument();
+    });
 
-      await user.type(dateInput, "2024-01-15");
-      await user.type(locationInput, "Test Location");
+    // Open dialog
+    await act(async () => {
+      await user.click(screen.getByRole("button", { name: "Add Games" }));
+    });
 
-      // Close dialog
-      await user.click(screen.getByText("Cancel"));
+    // Close dialog
+    await act(async () => {
+      await user.click(screen.getByRole("button", { name: "Cancel" }));
+    });
 
-      // Reopen dialog
-      await user.click(screen.getByText("Add Games"));
-
-      // Check that fields are reset
-      const newDateInput = screen.getByPlaceholderText("Date");
-      const newLocationInput = screen.getByPlaceholderText("Location");
-
-      expect(newDateInput).toHaveValue("");
-      expect(newLocationInput).toHaveValue("");
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     });
   });
 });

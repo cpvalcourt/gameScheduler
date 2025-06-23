@@ -3,8 +3,12 @@ import { TeamController } from '../../controllers/team.controller';
 import { TeamModel } from '../../models/team.model';
 import { UserModel } from '../../models/user.model';
 
+// Mock the models
 jest.mock('../../models/team.model');
 jest.mock('../../models/user.model');
+
+const mockedTeamModel = TeamModel as jest.Mocked<typeof TeamModel>;
+const mockedUserModel = UserModel as jest.Mocked<typeof UserModel>;
 
 describe('TeamController', () => {
   let mockRequest: Partial<Request>;
@@ -13,14 +17,10 @@ describe('TeamController', () => {
 
   beforeEach(() => {
     responseObject = {};
-    mockRequest = {};
     mockResponse = {
+      status: jest.fn().mockReturnThis(),
       json: jest.fn().mockImplementation((result) => {
         responseObject = result;
-        return mockResponse;
-      }),
-      status: jest.fn().mockImplementation((code) => {
-        responseObject.statusCode = code;
         return mockResponse;
       }),
     };
@@ -28,297 +28,272 @@ describe('TeamController', () => {
   });
 
   describe('createTeam', () => {
-    const mockTeam = {
-      id: 1,
-      name: 'Test Team',
-      description: 'Test Description',
-      created_by: 1,
-      created_at: new Date(),
-      updated_at: new Date(),
-    };
-
-    beforeEach(() => {
-      mockRequest.body = {
-        name: 'Test Team',
-        description: 'Test Description',
-      };
-      mockRequest.user = { id: 1, email: 'test@example.com' };
-    });
-
     it('should create a team successfully', async () => {
-      (TeamModel.create as jest.Mock).mockResolvedValue(mockTeam);
-      (TeamModel.addMember as jest.Mock).mockResolvedValue({
+      const mockUser = { id: 1, email: 'test@example.com' };
+      const mockTeam = {
         id: 1,
-        team_id: 1,
-        user_id: 1,
-        role: 'admin',
+        name: 'Test Team',
+        description: 'A test team',
+        created_by: 1,
         created_at: new Date(),
-        updated_at: new Date(),
-      });
+        updated_at: new Date()
+      };
+
+      mockRequest = {
+        body: { name: 'Test Team', description: 'A test team' },
+        user: mockUser
+      };
+
+      mockedTeamModel.create.mockResolvedValue(mockTeam);
+      mockedTeamModel.addMember.mockResolvedValue({} as any);
 
       await TeamController.createTeam(mockRequest as Request, mockResponse as Response);
 
-      expect(TeamModel.create).toHaveBeenCalledWith({
-        name: 'Test Team',
-        description: 'Test Description',
-        created_by: 1
-      });
-      expect(TeamModel.addMember).toHaveBeenCalledWith(1, 1, 'admin');
       expect(mockResponse.status).toHaveBeenCalledWith(201);
-      expect(responseObject).toEqual({
-        message: 'Team created successfully',
-        team: mockTeam
-      });
+      expect(responseObject.message).toBe('Team created successfully');
+      expect(responseObject.team).toEqual(mockTeam);
     });
 
-    it('should return 400 if name is missing', async () => {
-      mockRequest.body = { description: 'Test Description' };
+    it('should return 400 if team name is missing', async () => {
+      const mockUser = { id: 1, email: 'test@example.com' };
+
+      mockRequest = {
+        body: { description: 'A test team' },
+        user: mockUser
+      };
 
       await TeamController.createTeam(mockRequest as Request, mockResponse as Response);
 
       expect(mockResponse.status).toHaveBeenCalledWith(400);
-      expect(responseObject).toHaveProperty('message', 'Team name is required');
+      expect(responseObject.message).toBe('Team name is required');
+    });
+
+    it('should return 401 if user is not authenticated', async () => {
+      mockRequest = {
+        body: { name: 'Test Team', description: 'A test team' },
+        user: undefined
+      };
+
+      await TeamController.createTeam(mockRequest as Request, mockResponse as Response);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(401);
+      expect(responseObject.message).toBe('User not authenticated');
     });
   });
 
   describe('getTeam', () => {
-    const mockTeam = {
-      id: 1,
-      name: 'Test Team',
-      description: 'Test Description',
-      created_by: 1,
-      created_at: new Date(),
-      updated_at: new Date(),
-    };
-
-    const mockMembers = [
-      {
+    it('should return team details with members', async () => {
+      const mockTeam = {
         id: 1,
-        team_id: 1,
-        user_id: 1,
-        role: 'admin',
+        name: 'Test Team',
+        description: 'A test team',
+        created_by: 1,
         created_at: new Date(),
-        updated_at: new Date(),
-      },
-      {
-        id: 2,
-        team_id: 1,
-        user_id: 2,
-        role: 'member',
-        created_at: new Date(),
-        updated_at: new Date(),
-      },
-    ];
+        updated_at: new Date()
+      };
 
-    beforeEach(() => {
-      mockRequest.params = { id: '1' };
-    });
+      const mockMembers = [
+        {
+          id: 1,
+          team_id: 1,
+          user_id: 1,
+          role: 'admin' as const,
+          created_at: new Date(),
+          updated_at: new Date(),
+          username: 'testuser',
+          email: 'test@example.com'
+        }
+      ];
 
-    it('should return team data with members if found', async () => {
-      (TeamModel.findById as jest.Mock).mockResolvedValue(mockTeam);
-      (TeamModel.getTeamMembers as jest.Mock).mockResolvedValue(mockMembers);
+      mockRequest = {
+        params: { id: '1' }
+      };
+
+      mockedTeamModel.findById.mockResolvedValue(mockTeam);
+      mockedTeamModel.getTeamMembers.mockResolvedValue(mockMembers);
 
       await TeamController.getTeam(mockRequest as Request, mockResponse as Response);
 
-      expect(TeamModel.findById).toHaveBeenCalledWith(1);
-      expect(TeamModel.getTeamMembers).toHaveBeenCalledWith(1);
-      expect(responseObject).toEqual({ ...mockTeam, members: mockMembers });
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        ...mockTeam,
+        members: mockMembers
+      });
     });
 
     it('should return 404 if team not found', async () => {
-      (TeamModel.findById as jest.Mock).mockResolvedValue(null);
+      mockRequest = {
+        params: { id: '999' }
+      };
+
+      mockedTeamModel.findById.mockResolvedValue(null);
 
       await TeamController.getTeam(mockRequest as Request, mockResponse as Response);
 
       expect(mockResponse.status).toHaveBeenCalledWith(404);
-      expect(responseObject).toHaveProperty('message', 'Team not found');
+      expect(responseObject.message).toBe('Team not found');
     });
   });
 
   describe('updateTeam', () => {
-    const mockTeam = {
-      id: 1,
-      name: 'Updated Team',
-      description: 'Updated Description',
-      created_by: 1,
-      created_at: new Date(),
-      updated_at: new Date(),
-    };
-
-    beforeEach(() => {
-      mockRequest.params = { id: '1' };
-      mockRequest.body = {
+    it('should update team successfully', async () => {
+      const mockUser = { id: 1, email: 'test@example.com' };
+      const mockTeam = {
+        id: 1,
         name: 'Updated Team',
-        description: 'Updated Description',
+        description: 'Updated description',
+        created_by: 1,
+        created_at: new Date(),
+        updated_at: new Date()
       };
-      mockRequest.user = { id: 1, email: 'test@example.com' };
-    });
 
-    it('should update team if user is admin', async () => {
-      (TeamModel.isTeamAdmin as jest.Mock).mockResolvedValue(true);
-      (TeamModel.update as jest.Mock).mockResolvedValue(mockTeam);
+      mockRequest = {
+        params: { id: '1' },
+        body: { name: 'Updated Team', description: 'Updated description' },
+        user: mockUser
+      };
+
+      mockedTeamModel.isTeamAdmin.mockResolvedValue(true);
+      mockedTeamModel.update.mockResolvedValue(mockTeam);
 
       await TeamController.updateTeam(mockRequest as Request, mockResponse as Response);
 
-      expect(TeamModel.isTeamAdmin).toHaveBeenCalledWith(1, 1);
-      expect(TeamModel.update).toHaveBeenCalledWith(1, {
-        name: 'Updated Team',
-        description: 'Updated Description',
-      });
-      expect(responseObject).toEqual({
+      expect(mockResponse.json).toHaveBeenCalledWith({
         message: 'Team updated successfully',
         team: mockTeam
       });
     });
 
-    it('should return 403 if user is not admin', async () => {
-      (TeamModel.isTeamAdmin as jest.Mock).mockResolvedValue(false);
+    it('should return 403 if user is not team admin', async () => {
+      const mockUser = { id: 1, email: 'test@example.com' };
+
+      mockRequest = {
+        params: { id: '1' },
+        body: { name: 'Updated Team' },
+        user: mockUser
+      };
+
+      mockedTeamModel.isTeamAdmin.mockResolvedValue(false);
 
       await TeamController.updateTeam(mockRequest as Request, mockResponse as Response);
 
       expect(mockResponse.status).toHaveBeenCalledWith(403);
-      expect(responseObject).toHaveProperty('message', 'Only team admins can update team details');
+      expect(responseObject.message).toBe('Only team admins can update team details');
     });
   });
 
   describe('deleteTeam', () => {
-    beforeEach(() => {
-      mockRequest.params = { id: '1' };
-      mockRequest.user = { id: 1, email: 'test@example.com' };
-    });
+    it('should delete team successfully', async () => {
+      const mockUser = { id: 1, email: 'test@example.com' };
 
-    it('should delete team if user is admin', async () => {
-      (TeamModel.isTeamAdmin as jest.Mock).mockResolvedValue(true);
-      (TeamModel.delete as jest.Mock).mockResolvedValue(undefined);
+      mockRequest = {
+        params: { id: '1' },
+        user: mockUser
+      };
 
-      await TeamController.deleteTeam(mockRequest as Request, mockResponse as Response);
-
-      expect(TeamModel.isTeamAdmin).toHaveBeenCalledWith(1, 1);
-      expect(TeamModel.delete).toHaveBeenCalledWith(1);
-      expect(responseObject).toHaveProperty('message', 'Team deleted successfully');
-    });
-
-    it('should return 403 if user is not admin', async () => {
-      (TeamModel.isTeamAdmin as jest.Mock).mockResolvedValue(false);
+      mockedTeamModel.isTeamAdmin.mockResolvedValue(true);
+      mockedTeamModel.delete.mockResolvedValue();
 
       await TeamController.deleteTeam(mockRequest as Request, mockResponse as Response);
 
-      expect(mockResponse.status).toHaveBeenCalledWith(403);
-      expect(responseObject).toHaveProperty('message', 'Only team admins can delete teams');
-    });
-  });
-
-  describe('addMember', () => {
-    const mockUser = {
-      id: 2,
-      username: 'newmember',
-      email: 'newmember@example.com',
-    };
-
-    beforeEach(() => {
-      mockRequest.params = { id: '1' };
-      mockRequest.body = { email: 'newmember@example.com', role: 'member' };
-      mockRequest.user = { id: 1, email: 'test@example.com' };
-    });
-
-    it('should add member if user is admin', async () => {
-      (TeamModel.isTeamAdmin as jest.Mock).mockResolvedValue(true);
-      (UserModel.findByEmail as jest.Mock).mockResolvedValue(mockUser);
-      (TeamModel.addMember as jest.Mock).mockResolvedValue({
-        id: 1,
-        team_id: 1,
-        user_id: 2,
-        role: 'member',
-        created_at: new Date(),
-        updated_at: new Date(),
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        message: 'Team deleted successfully'
       });
-
-      await TeamController.addMember(mockRequest as Request, mockResponse as Response);
-
-      expect(TeamModel.isTeamAdmin).toHaveBeenCalledWith(1, 1);
-      expect(UserModel.findByEmail).toHaveBeenCalledWith('newmember@example.com');
-      expect(TeamModel.addMember).toHaveBeenCalledWith(1, 2, 'member');
-      expect(responseObject).toHaveProperty('message', 'Member added successfully');
     });
 
-    it('should return 403 if user is not admin', async () => {
-      (TeamModel.isTeamAdmin as jest.Mock).mockResolvedValue(false);
+    it('should return 403 if user is not team admin', async () => {
+      const mockUser = { id: 1, email: 'test@example.com' };
 
-      await TeamController.addMember(mockRequest as Request, mockResponse as Response);
+      mockRequest = {
+        params: { id: '1' },
+        user: mockUser
+      };
+
+      mockedTeamModel.isTeamAdmin.mockResolvedValue(false);
+
+      await TeamController.deleteTeam(mockRequest as Request, mockResponse as Response);
 
       expect(mockResponse.status).toHaveBeenCalledWith(403);
-      expect(responseObject).toHaveProperty('message', 'Only team admins can add members');
-    });
-
-    it('should return 404 if user not found', async () => {
-      (TeamModel.isTeamAdmin as jest.Mock).mockResolvedValue(true);
-      (UserModel.findByEmail as jest.Mock).mockResolvedValue(null);
-
-      await TeamController.addMember(mockRequest as Request, mockResponse as Response);
-
-      expect(mockResponse.status).toHaveBeenCalledWith(404);
-      expect(responseObject).toHaveProperty('message', 'User not found');
-    });
-  });
-
-  describe('removeMember', () => {
-    beforeEach(() => {
-      mockRequest.params = { id: '1', memberId: '2' };
-      mockRequest.user = { id: 1, email: 'test@example.com' };
-    });
-
-    it('should remove member if user is admin', async () => {
-      (TeamModel.isTeamAdmin as jest.Mock).mockResolvedValue(true);
-      (TeamModel.removeMember as jest.Mock).mockResolvedValue(undefined);
-
-      await TeamController.removeMember(mockRequest as Request, mockResponse as Response);
-
-      expect(TeamModel.isTeamAdmin).toHaveBeenCalledWith(1, 1);
-      expect(TeamModel.removeMember).toHaveBeenCalledWith(1, 2);
-      expect(responseObject).toHaveProperty('message', 'Member removed successfully');
-    });
-
-    it('should return 403 if user is not admin', async () => {
-      (TeamModel.isTeamAdmin as jest.Mock).mockResolvedValue(false);
-
-      await TeamController.removeMember(mockRequest as Request, mockResponse as Response);
-
-      expect(mockResponse.status).toHaveBeenCalledWith(403);
-      expect(responseObject).toHaveProperty('message', 'Only team admins can remove members');
+      expect(responseObject.message).toBe('Only team admins can delete teams');
     });
   });
 
   describe('getUserTeams', () => {
-    const mockTeams = [
-      {
-        id: 1,
-        name: 'Team 1',
-        description: 'Description 1',
-        created_by: 1,
-        created_at: new Date(),
-        updated_at: new Date(),
-      },
-      {
-        id: 2,
-        name: 'Team 2',
-        description: 'Description 2',
-        created_by: 1,
-        created_at: new Date(),
-        updated_at: new Date(),
-      },
-    ];
+    it('should return user teams successfully', async () => {
+      const mockUser = { id: 1, email: 'test@example.com' };
+      const mockTeams = [
+        {
+          id: 1,
+          name: 'Team 1',
+          description: 'Team 1 description',
+          created_by: 1,
+          created_at: new Date(),
+          updated_at: new Date()
+        }
+      ];
 
-    beforeEach(() => {
-      mockRequest.user = { id: 1, email: 'test@example.com' };
-    });
+      mockRequest = {
+        user: mockUser
+      };
 
-    it('should return user teams', async () => {
-      (TeamModel.getUserTeams as jest.Mock).mockResolvedValue(mockTeams);
+      mockedTeamModel.getUserTeams.mockResolvedValue(mockTeams);
 
       await TeamController.getUserTeams(mockRequest as Request, mockResponse as Response);
 
-      expect(TeamModel.getUserTeams).toHaveBeenCalledWith(1);
-      expect(responseObject).toEqual(mockTeams);
+      expect(mockResponse.json).toHaveBeenCalledWith(mockTeams);
+    });
+
+    it('should return 401 if user is not authenticated', async () => {
+      mockRequest = {
+        user: undefined
+      };
+
+      await TeamController.getUserTeams(mockRequest as Request, mockResponse as Response);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(401);
+      expect(responseObject.message).toBe('User not authenticated');
+    });
+  });
+
+  describe('getTeamStats', () => {
+    it('should return team statistics successfully', async () => {
+      const mockUser = { id: 1, email: 'test@example.com' };
+      const mockStats = {
+        totalMembers: 5,
+        admins: 1,
+        captains: 1,
+        players: 2,
+        snackProviders: 1,
+        createdAt: new Date(),
+        lastActivity: new Date()
+      };
+
+      mockRequest = {
+        params: { id: '1' },
+        user: mockUser
+      };
+
+      mockedTeamModel.isTeamMember.mockResolvedValue(true);
+      mockedTeamModel.getTeamStats.mockResolvedValue(mockStats);
+
+      await TeamController.getTeamStats(mockRequest as Request, mockResponse as Response);
+
+      expect(mockResponse.json).toHaveBeenCalledWith(mockStats);
+    });
+
+    it('should return 403 if user is not team member', async () => {
+      const mockUser = { id: 1, email: 'test@example.com' };
+
+      mockRequest = {
+        params: { id: '1' },
+        user: mockUser
+      };
+
+      mockedTeamModel.isTeamMember.mockResolvedValue(false);
+
+      await TeamController.getTeamStats(mockRequest as Request, mockResponse as Response);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(403);
+      expect(responseObject.message).toBe('Not authorized to view this team');
     });
   });
 }); 

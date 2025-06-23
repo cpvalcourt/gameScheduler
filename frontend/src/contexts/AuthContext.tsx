@@ -6,6 +6,8 @@ interface User {
   email: string;
   username: string;
   is_verified: boolean;
+  role: "user" | "moderator" | "admin";
+  is_active: boolean;
   profile_picture_url?: string | null;
   bio?: string | null;
   location?: string | null;
@@ -40,6 +42,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Helper function to construct full URL for profile pictures
+  const constructFullProfilePictureUrl = (userData: any): User => {
+    if (
+      userData.profile_picture_url &&
+      !userData.profile_picture_url.startsWith("http")
+    ) {
+      return {
+        ...userData,
+        profile_picture_url: `http://localhost:3002${userData.profile_picture_url}`,
+      };
+    }
+    return userData;
+  };
+
   useEffect(() => {
     // Check for stored token and validate it
     const token = localStorage.getItem("token");
@@ -49,7 +65,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       api
         .get("/users/me")
         .then((response) => {
-          setUser(response.data.user);
+          setUser(constructFullProfilePictureUrl(response.data.user));
         })
         .catch(() => {
           localStorage.removeItem("token");
@@ -70,7 +86,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       const { token, user } = response.data;
       localStorage.setItem("token", token);
       api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-      setUser(user);
+      setUser(constructFullProfilePictureUrl(user));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
       throw err;
@@ -98,7 +114,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const updateUser = (userData: User) => {
-    setUser(userData);
+    setUser(constructFullProfilePictureUrl(userData));
   };
 
   return (

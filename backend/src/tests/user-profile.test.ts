@@ -45,6 +45,8 @@ describe('User Profile Management', () => {
       expect(response.body.user).toHaveProperty('email');
       expect(response.body.user).toHaveProperty('username');
       expect(response.body.user).toHaveProperty('is_verified');
+      expect(response.body.user).toHaveProperty('role');
+      expect(response.body.user).toHaveProperty('is_active');
       expect(response.body.user).toHaveProperty('created_at');
     });
 
@@ -73,6 +75,8 @@ describe('User Profile Management', () => {
       expect(response.body.message).toBe('Profile updated successfully');
       expect(response.body.user.username).toBe(updateData.username);
       expect(response.body.user.email).toBe(updateData.email);
+      expect(response.body.user).toHaveProperty('role');
+      expect(response.body.user).toHaveProperty('is_active');
     });
 
     it('should return 400 for missing fields', async () => {

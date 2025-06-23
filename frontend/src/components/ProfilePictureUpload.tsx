@@ -1,176 +1,179 @@
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef } from "react";
 import {
   Box,
   Button,
+  Typography,
+  Avatar,
+  IconButton,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  IconButton,
-  Avatar,
-  Typography,
   CircularProgress,
   Alert,
-  Paper,
+  Slider,
+  Grid,
 } from "@mui/material";
-import { PhotoCamera, Delete, Crop, Save, Cancel } from "@mui/icons-material";
-import ReactCrop from "react-image-crop";
+import {
+  PhotoCamera as PhotoCameraIcon,
+  Crop as CropIcon,
+  Save as SaveIcon,
+  Cancel as CancelIcon,
+  ZoomIn as ZoomInIcon,
+  ZoomOut as ZoomOutIcon,
+  RotateLeft as RotateLeftIcon,
+  RotateRight as RotateRightIcon,
+} from "@mui/icons-material";
+import ReactCrop, { type Crop } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
-import { uploadProfilePicture, deleteProfilePicture } from "../services/api";
+import { useI18n } from "../contexts/I18nContext";
+import api from "../services/api";
 
 interface ProfilePictureUploadProps {
-  currentPictureUrl?: string | null;
-  onPictureUpdate: (pictureUrl: string | null) => void;
+  currentImageUrl?: string;
+  onImageUpdate: (imageUrl: string) => void;
   size?: number;
 }
 
-export const ProfilePictureUpload = ({
-  currentPictureUrl,
-  onPictureUpdate,
+const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
+  currentImageUrl,
+  onImageUpdate,
   size = 120,
-}: ProfilePictureUploadProps) => {
-  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
-  const [isCropDialogOpen, setIsCropDialogOpen] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string>("");
-  const [crop, setCrop] = useState<any>({
+}) => {
+  const { t } = useI18n();
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [crop, setCrop] = useState<Crop>({
     unit: "%",
-    width: 90,
-    height: 90,
-    x: 5,
-    y: 5,
+    width: 100,
+    height: 100,
+    x: 0,
+    y: 0,
   });
-  const [completedCrop, setCompletedCrop] = useState<any>();
+  const [isCropDialogOpen, setIsCropDialogOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [error, setError] = useState<string>("");
-  const [success, setSuccess] = useState<string>("");
-  const imgRef = useRef<HTMLImageElement>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [zoom, setZoom] = useState(1);
+  const [rotation, setRotation] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const imageRef = useRef<HTMLImageElement>(null);
 
-  const handleFileSelect = (event: any) => {
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        setError("File size must be less than 5MB");
+        setError(t("profile.imageTooLarge"));
         return;
       }
 
-      if (!file.type.startsWith("image/")) {
-        setError("Please select an image file");
-        return;
-      }
-
-      setSelectedFile(file);
-      setError("");
-      const url = URL.createObjectURL(file);
-      setPreviewUrl(url);
-      setIsUploadDialogOpen(false);
-      setIsCropDialogOpen(true);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        setSelectedImage(result);
+        setIsCropDialogOpen(true);
+        setError(null);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
-  const onImageLoad = useCallback((e: any) => {
-    const { width, height } = e.currentTarget;
-    const crop = {
-      unit: "%",
-      width: 90,
-      height: 90,
-      x: 5,
-      y: 5,
-    };
+  const handleCropComplete = (crop: Crop) => {
     setCrop(crop);
-  }, []);
+  };
 
-  const getCroppedImg = useCallback(async (): Promise<Blob> => {
-    if (!imgRef.current || !completedCrop) {
-      throw new Error("No image or crop data");
-    }
+  const handleZoomChange = (_event: Event, newValue: number | number[]) => {
+    setZoom(newValue as number);
+  };
 
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
+  const handleRotationChange = (direction: "left" | "right") => {
+    setRotation((prev) => prev + (direction === "left" ? -90 : 90));
+  };
 
-    if (!ctx) {
-      throw new Error("No 2d context");
-    }
+  const getCroppedImg = (): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      if (!imageRef.current || !selectedImage) {
+        reject(new Error(t("profile.noImageSelected")));
+        return;
+      }
 
-    const scaleX = imgRef.current.naturalWidth / imgRef.current.width;
-    const scaleY = imgRef.current.naturalHeight / imgRef.current.height;
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
 
-    canvas.width = completedCrop.width;
-    canvas.height = completedCrop.height;
+      if (!ctx) {
+        reject(new Error(t("profile.canvasError")));
+        return;
+      }
 
-    ctx.drawImage(
-      imgRef.current,
-      completedCrop.x * scaleX,
-      completedCrop.y * scaleY,
-      completedCrop.width * scaleX,
-      completedCrop.height * scaleY,
-      0,
-      0,
-      completedCrop.width,
-      completedCrop.height
-    );
+      const image = imageRef.current;
+      const scaleX = image.naturalWidth / image.width;
+      const scaleY = image.naturalHeight / image.height;
 
-    return new Promise((resolve) => {
+      canvas.width = crop.width * scaleX;
+      canvas.height = crop.height * scaleY;
+
+      ctx.save();
+      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.rotate((rotation * Math.PI) / 180);
+      ctx.scale(zoom, zoom);
+      ctx.translate(-canvas.width / 2, -canvas.height / 2);
+
+      ctx.drawImage(
+        image,
+        crop.x * scaleX,
+        crop.y * scaleY,
+        crop.width * scaleX,
+        crop.height * scaleY,
+        0,
+        0,
+        crop.width * scaleX,
+        crop.height * scaleY
+      );
+
+      ctx.restore();
+
       canvas.toBlob(
         (blob) => {
           if (blob) {
-            resolve(blob);
+            const url = URL.createObjectURL(blob);
+            resolve(url);
+          } else {
+            reject(new Error(t("profile.blobError")));
           }
         },
         "image/jpeg",
-        0.8
+        0.9
       );
     });
-  }, [completedCrop]);
-
-  const handleUpload = async () => {
-    if (!selectedFile) return;
-
-    setIsUploading(true);
-    setError("");
-    setSuccess("");
-
-    try {
-      const croppedBlob = await getCroppedImg();
-      const croppedFile = new File([croppedBlob], selectedFile.name, {
-        type: "image/jpeg",
-      });
-
-      const formData = new FormData();
-      formData.append("image", croppedFile);
-
-      const response = await uploadProfilePicture(formData);
-
-      if (response.user.profile_picture_url) {
-        onPictureUpdate(response.user.profile_picture_url);
-        setSuccess("Profile picture uploaded successfully!");
-      }
-
-      setIsCropDialogOpen(false);
-      setSelectedFile(null);
-      setPreviewUrl("");
-      if (previewUrl) {
-        URL.revokeObjectURL(previewUrl);
-      }
-    } catch (err: any) {
-      setError(err.message || "Failed to upload profile picture");
-    } finally {
-      setIsUploading(false);
-    }
   };
 
-  const handleDelete = async () => {
-    setIsUploading(true);
-    setError("");
-    setSuccess("");
-
+  const handleSave = async () => {
     try {
-      await deleteProfilePicture();
-      onPictureUpdate(null);
-      setSuccess("Profile picture deleted successfully!");
+      setIsUploading(true);
+      setError(null);
+
+      const croppedImageUrl = await getCroppedImg();
+      const response = await fetch(croppedImageUrl);
+      const blob = await response.blob();
+
+      const formData = new FormData();
+      formData.append("image", blob, "profile-picture.jpg");
+
+      const apiResponse = await api.post("/users/profile-picture", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      onImageUpdate(apiResponse.data.user.profile_picture_url);
+      setIsCropDialogOpen(false);
+      setSelectedImage(null);
+      setCrop({ unit: "%", width: 100, height: 100, x: 0, y: 0 });
+      setZoom(1);
+      setRotation(0);
+
+      // Clean up the blob URL
+      URL.revokeObjectURL(croppedImageUrl);
     } catch (err: any) {
-      setError(err.message || "Failed to delete profile picture");
+      setError(err.response?.data?.message || t("profile.uploadFailed"));
     } finally {
       setIsUploading(false);
     }
@@ -178,45 +181,32 @@ export const ProfilePictureUpload = ({
 
   const handleCancel = () => {
     setIsCropDialogOpen(false);
-    setSelectedFile(null);
-    setError("");
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-    }
+    setSelectedImage(null);
+    setCrop({ unit: "%", width: 100, height: 100, x: 0, y: 0 });
+    setZoom(1);
+    setRotation(0);
+    setError(null);
   };
 
-  const getImageUrl = (url: string) => {
-    if (url.startsWith("http")) {
-      return url;
-    }
-    return `${import.meta.env.VITE_API_URL || "http://localhost:3002"}${url}`;
+  const handleCameraClick = () => {
+    fileInputRef.current?.click();
   };
 
   return (
-    <Box
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        gap: 2,
-      }}
-    >
-      {/* Current Profile Picture */}
-      <Box sx={{ position: "relative" }}>
+    <Box sx={{ textAlign: "center" }}>
+      <Box sx={{ position: "relative", display: "inline-block" }}>
         <Avatar
-          src={currentPictureUrl ? getImageUrl(currentPictureUrl) : undefined}
+          src={currentImageUrl}
           sx={{
             width: size,
             height: size,
             fontSize: size * 0.4,
-            border: "3px solid #e0e0e0",
+            border: "3px solid #fff",
+            boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
           }}
-        >
-          {!currentPictureUrl && "U"}
-        </Avatar>
-
-        {/* Upload Button Overlay */}
+        />
         <IconButton
+          onClick={handleCameraClick}
           sx={{
             position: "absolute",
             bottom: 0,
@@ -226,134 +216,112 @@ export const ProfilePictureUpload = ({
             "&:hover": {
               backgroundColor: "primary.dark",
             },
-            width: 32,
-            height: 32,
           }}
-          onClick={() => setIsUploadDialogOpen(true)}
         >
-          <PhotoCamera sx={{ fontSize: 16 }} />
+          <PhotoCameraIcon />
         </IconButton>
       </Box>
 
-      {/* Action Buttons */}
-      <Box sx={{ display: "flex", gap: 1 }}>
-        <Button
-          variant="outlined"
-          size="small"
-          startIcon={<PhotoCamera />}
-          onClick={() => setIsUploadDialogOpen(true)}
-        >
-          Upload
-        </Button>
-        {currentPictureUrl && (
-          <Button
-            variant="outlined"
-            color="error"
-            size="small"
-            startIcon={<Delete />}
-            onClick={handleDelete}
-            disabled={isUploading}
-          >
-            Remove
-          </Button>
-        )}
-      </Box>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleFileSelect}
+        style={{ display: "none" }}
+      />
 
-      {/* Success/Error Messages */}
-      {success && (
-        <Alert severity="success" sx={{ width: "100%" }}>
-          {success}
-        </Alert>
-      )}
-      {error && (
-        <Alert severity="error" sx={{ width: "100%" }}>
-          {error}
-        </Alert>
-      )}
+      <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+        {t("profile.clickToUpload")}
+      </Typography>
 
-      {/* File Upload Dialog */}
-      <Dialog
-        open={isUploadDialogOpen}
-        onClose={() => setIsUploadDialogOpen(false)}
-      >
-        <DialogTitle>Upload Profile Picture</DialogTitle>
-        <DialogContent>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Select an image file (JPG, PNG, GIF). Maximum size: 5MB
-          </Typography>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleFileSelect}
-            style={{ display: "none" }}
-          />
-          <Button
-            variant="contained"
-            component="label"
-            fullWidth
-            onClick={() => fileInputRef.current?.click()}
-          >
-            Choose File
-          </Button>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setIsUploadDialogOpen(false)}>Cancel</Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Image Crop Dialog */}
       <Dialog
         open={isCropDialogOpen}
         onClose={handleCancel}
         maxWidth="md"
         fullWidth
       >
-        <DialogTitle>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <Crop />
-            Crop Profile Picture
-          </Box>
-        </DialogTitle>
+        <DialogTitle>{t("profile.cropImage")}</DialogTitle>
         <DialogContent>
-          <Paper sx={{ p: 2, textAlign: "center" }}>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              Drag to adjust the crop area. The image will be cropped to a
-              square.
-            </Typography>
-            {previewUrl && (
-              <ReactCrop
-                crop={crop}
-                onChange={(c) => setCrop(c)}
-                onComplete={(c) => setCompletedCrop(c)}
-                aspect={1}
-                circularCrop
-              >
-                <img
-                  ref={imgRef}
-                  alt="Crop preview"
-                  src={previewUrl}
-                  onLoad={onImageLoad}
-                  style={{ maxWidth: "100%", maxHeight: "400px" }}
-                />
-              </ReactCrop>
-            )}
-          </Paper>
+          {error && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {error}
+            </Alert>
+          )}
+
+          <Box sx={{ textAlign: "center", mb: 2 }}>
+            <ReactCrop
+              crop={crop}
+              onChange={handleCropComplete}
+              aspect={1}
+              circularCrop
+            >
+              <img
+                ref={imageRef}
+                src={selectedImage || ""}
+                alt={t("profile.cropPreview")}
+                style={{
+                  maxWidth: "100%",
+                  maxHeight: "400px",
+                  transform: `scale(${zoom}) rotate(${rotation}deg)`,
+                }}
+              />
+            </ReactCrop>
+          </Box>
+
+          <Grid container spacing={2} sx={{ mt: 2 }}>
+            <Grid item xs={6}>
+              <Typography gutterBottom>{t("profile.zoom")}</Typography>
+              <Slider
+                value={zoom}
+                onChange={handleZoomChange}
+                min={0.5}
+                max={3}
+                step={0.1}
+                marks={[
+                  { value: 0.5, label: "0.5x" },
+                  { value: 1, label: "1x" },
+                  { value: 2, label: "2x" },
+                  { value: 3, label: "3x" },
+                ]}
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <Typography gutterBottom>{t("profile.rotation")}</Typography>
+              <Box sx={{ display: "flex", gap: 1, justifyContent: "center" }}>
+                <IconButton
+                  onClick={() => handleRotationChange("left")}
+                  color="primary"
+                >
+                  <RotateLeftIcon />
+                </IconButton>
+                <IconButton
+                  onClick={() => handleRotationChange("right")}
+                  color="primary"
+                >
+                  <RotateRightIcon />
+                </IconButton>
+              </Box>
+            </Grid>
+          </Grid>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCancel} disabled={isUploading}>
-            Cancel
+          <Button onClick={handleCancel} startIcon={<CancelIcon />}>
+            {t("common.cancel")}
           </Button>
           <Button
-            onClick={handleUpload}
+            onClick={handleSave}
             variant="contained"
-            startIcon={isUploading ? <CircularProgress size={16} /> : <Save />}
-            disabled={isUploading || !completedCrop}
+            startIcon={
+              isUploading ? <CircularProgress size={20} /> : <SaveIcon />
+            }
+            disabled={isUploading}
           >
-            {isUploading ? "Uploading..." : "Upload"}
+            {isUploading ? t("profile.uploading") : t("profile.save")}
           </Button>
         </DialogActions>
       </Dialog>
     </Box>
   );
 };
+
+export default ProfilePictureUpload;

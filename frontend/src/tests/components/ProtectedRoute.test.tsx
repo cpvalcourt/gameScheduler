@@ -1,6 +1,9 @@
-import { render, screen } from "@testing-library/react";
+import { screen, render } from "@testing-library/react";
 import { describe, it, expect, beforeEach, vi } from "vitest";
+import React, { ReactElement } from "react";
 import { BrowserRouter } from "react-router-dom";
+import { AuthProvider } from "../../contexts/AuthContext";
+import { I18nProvider } from "../../contexts/I18nContext";
 import ProtectedRoute from "../../components/ProtectedRoute";
 
 // Mock localStorage
@@ -17,10 +20,16 @@ Object.defineProperty(window, "localStorage", {
 // Test component to render inside ProtectedRoute
 const TestComponent = () => <div>Protected Content</div>;
 
-// Wrapper component to provide router context
-const TestWrapper = ({ children }: { children: React.ReactNode }) => (
-  <BrowserRouter>{children}</BrowserRouter>
-);
+// Custom render function with providers
+const renderWithProviders = (ui: any) => {
+  return render(
+    <BrowserRouter>
+      <I18nProvider>
+        <AuthProvider>{ui}</AuthProvider>
+      </I18nProvider>
+    </BrowserRouter>
+  );
+};
 
 describe("ProtectedRoute", () => {
   beforeEach(() => {
@@ -30,12 +39,10 @@ describe("ProtectedRoute", () => {
   it("should render children when token exists", () => {
     localStorageMock.getItem.mockReturnValue("valid-token");
 
-    render(
-      <TestWrapper>
-        <ProtectedRoute>
-          <TestComponent />
-        </ProtectedRoute>
-      </TestWrapper>
+    renderWithProviders(
+      <ProtectedRoute>
+        <TestComponent />
+      </ProtectedRoute>
     );
 
     expect(screen.getByText("Protected Content")).toBeInTheDocument();
@@ -44,41 +51,36 @@ describe("ProtectedRoute", () => {
   it("should redirect to login when no token exists", () => {
     localStorageMock.getItem.mockReturnValue(null);
 
-    render(
-      <TestWrapper>
-        <ProtectedRoute>
-          <TestComponent />
-        </ProtectedRoute>
-      </TestWrapper>
+    renderWithProviders(
+      <ProtectedRoute>
+        <TestComponent />
+      </ProtectedRoute>
     );
 
-    // The component should redirect, so the protected content should not be visible
-    expect(screen.queryByText("Protected Content")).not.toBeInTheDocument();
+    // Should redirect to login page
+    expect(window.location.pathname).toBe("/login");
   });
 
-  it("should redirect to login when token is empty string", () => {
+  it("should redirect to login when token is empty", () => {
     localStorageMock.getItem.mockReturnValue("");
 
-    render(
-      <TestWrapper>
-        <ProtectedRoute>
-          <TestComponent />
-        </ProtectedRoute>
-      </TestWrapper>
+    renderWithProviders(
+      <ProtectedRoute>
+        <TestComponent />
+      </ProtectedRoute>
     );
 
-    expect(screen.queryByText("Protected Content")).not.toBeInTheDocument();
+    // Should redirect to login page
+    expect(window.location.pathname).toBe("/login");
   });
 
   it("should redirect to login when token is undefined", () => {
     localStorageMock.getItem.mockReturnValue(undefined);
 
-    render(
-      <TestWrapper>
-        <ProtectedRoute>
-          <TestComponent />
-        </ProtectedRoute>
-      </TestWrapper>
+    renderWithProviders(
+      <ProtectedRoute>
+        <TestComponent />
+      </ProtectedRoute>
     );
 
     expect(screen.queryByText("Protected Content")).not.toBeInTheDocument();
@@ -87,14 +89,12 @@ describe("ProtectedRoute", () => {
   it("should render multiple children when token exists", () => {
     localStorageMock.getItem.mockReturnValue("valid-token");
 
-    render(
-      <TestWrapper>
-        <ProtectedRoute>
-          <div>Child 1</div>
-          <div>Child 2</div>
-          <TestComponent />
-        </ProtectedRoute>
-      </TestWrapper>
+    renderWithProviders(
+      <ProtectedRoute>
+        <div>Child 1</div>
+        <div>Child 2</div>
+        <TestComponent />
+      </ProtectedRoute>
     );
 
     expect(screen.getByText("Child 1")).toBeInTheDocument();
@@ -105,12 +105,10 @@ describe("ProtectedRoute", () => {
   it("should call localStorage.getItem with correct key", () => {
     localStorageMock.getItem.mockReturnValue("valid-token");
 
-    render(
-      <TestWrapper>
-        <ProtectedRoute>
-          <TestComponent />
-        </ProtectedRoute>
-      </TestWrapper>
+    renderWithProviders(
+      <ProtectedRoute>
+        <TestComponent />
+      </ProtectedRoute>
     );
 
     expect(localStorageMock.getItem).toHaveBeenCalledWith("token");

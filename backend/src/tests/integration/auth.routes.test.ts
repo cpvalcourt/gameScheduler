@@ -59,6 +59,8 @@ describe('Auth Routes Integration', () => {
     
     expect(res.status).toBe(200);
     expect(res.body.user).toHaveProperty('email', testUser.email);
+    expect(res.body.user).toHaveProperty('role');
+    expect(res.body.user).toHaveProperty('is_active');
   });
 
   it('should not access a protected route without token', async () => {

@@ -28,7 +28,9 @@ import {
   AdminPanelSettings,
 } from "@mui/icons-material";
 import { useAuth } from "../contexts/AuthContext";
+import { useI18n } from "../contexts/I18nContext";
 import api from "../services/api";
+import NavigationHeader from "../components/NavigationHeader";
 
 interface DashboardStats {
   totalGameSeries: number;
@@ -61,6 +63,7 @@ interface UpcomingGame {
 function DashboardPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useI18n();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [upcomingGames, setUpcomingGames] = useState<UpcomingGame[]>([]);
@@ -86,9 +89,10 @@ function DashboardPage() {
 
       // Fetch upcoming games
       const gamesResponse = await api.get("/dashboard/upcoming-games");
+      console.log("Upcoming games API response:", gamesResponse.data);
       setUpcomingGames(gamesResponse.data);
     } catch (err: any) {
-      setError(err.response?.data?.message || "Failed to load dashboard data");
+      setError(err.response?.data?.message || t("dashboard.failedToLoad"));
       // Set mock data for development
       setMockData();
     } finally {
@@ -110,7 +114,7 @@ function DashboardPage() {
       {
         id: 1,
         type: "game_created",
-        title: "New Game Created",
+        title: t("dashboard.newGameCreated"),
         description: "Basketball Tournament - Round 1 added to Summer League",
         timestamp: "2024-01-15T10:30:00Z",
         entityId: 1,
@@ -118,7 +122,7 @@ function DashboardPage() {
       {
         id: 2,
         type: "series_created",
-        title: "New Series Created",
+        title: t("dashboard.newSeriesCreated"),
         description: "Summer League 2024 created",
         timestamp: "2024-01-14T15:45:00Z",
         entityId: 2,
@@ -126,7 +130,7 @@ function DashboardPage() {
       {
         id: 3,
         type: "team_joined",
-        title: "Team Joined",
+        title: t("dashboard.teamJoined"),
         description: "Thunder Dragons joined Basketball Tournament",
         timestamp: "2024-01-13T09:20:00Z",
         entityId: 3,
@@ -167,15 +171,15 @@ function DashboardPage() {
   const getActivityIcon = (type: string) => {
     switch (type) {
       case "game_created":
-        return <SportsEsports color="primary" />;
+        return <SportsEsports color="primary" aria-hidden="true" />;
       case "series_created":
-        return <Event color="secondary" />;
+        return <Event color="secondary" aria-hidden="true" />;
       case "team_joined":
-        return <Group color="success" />;
+        return <Group color="success" aria-hidden="true" />;
       case "game_updated":
-        return <TrendingUp color="info" />;
+        return <TrendingUp color="info" aria-hidden="true" />;
       default:
-        return <Event />;
+        return <Event aria-hidden="true" />;
     }
   };
 
@@ -189,306 +193,584 @@ function DashboardPage() {
   };
 
   const formatGameDate = (date: string, time: string) => {
-    const gameDate = new Date(`${date}T${time}`);
-    return gameDate.toLocaleDateString("en-US", {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-    });
+    try {
+      // Debug logging to see what data we're receiving
+      console.log("formatGameDate input:", {
+        date,
+        time,
+        dateType: typeof date,
+        timeType: typeof time,
+      });
+
+      // Handle cases where date or time might be null, undefined, or invalid
+      if (!date || !time) {
+        console.log("Missing date or time:", { date, time });
+        return "Date TBD";
+      }
+
+      // Ensure the date string is in a valid format
+      let dateStr = date;
+      if (date.includes("T")) {
+        // If date already includes time, use it as is
+        dateStr = date;
+      } else {
+        // Otherwise, combine date and time
+        // Handle different time formats
+        let timeStr = time;
+        if (time && !time.includes(":")) {
+          // If time is just a number (e.g., "1900"), convert to "19:00"
+          if (time.length === 4) {
+            timeStr = `${time.substring(0, 2)}:${time.substring(2, 4)}`;
+          }
+        }
+        dateStr = `${date}T${timeStr}`;
+      }
+
+      console.log("Formatted date string:", dateStr);
+      const gameDate = new Date(dateStr);
+
+      // Check if the date is valid
+      if (isNaN(gameDate.getTime())) {
+        console.log("Invalid date created from:", dateStr);
+        return "Date TBD";
+      }
+
+      return gameDate.toLocaleDateString("en-US", {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+      });
+    } catch (error) {
+      console.error("Error formatting game date:", error, { date, time });
+      return "Date TBD";
+    }
   };
 
   if (loading) {
     return (
-      <Container>
+      <Container component="main" maxWidth="xl">
         <Box
           display="flex"
           justifyContent="center"
           alignItems="center"
           minHeight="60vh"
+          role="status"
+          aria-label={t("dashboard.loading")}
         >
-          <CircularProgress />
+          <CircularProgress aria-label={t("dashboard.loading")} />
         </Box>
       </Container>
     );
   }
 
   return (
-    <Container maxWidth="xl">
-      {/* Header */}
-      <Box sx={{ mt: 4, mb: 4 }}>
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            mb: 2,
-          }}
-        >
-          <Box>
-            <Typography variant="h4" component="h1" gutterBottom>
-              Welcome back, {user?.username || "User"}! 👋
-            </Typography>
-            <Typography variant="body1" color="text.secondary">
-              Here's what's happening with your game schedules
-            </Typography>
-          </Box>
-          <Box sx={{ display: "flex", gap: 2 }}>
-            {user?.role === "admin" && (
-              <Button
-                variant="contained"
-                color="secondary"
-                startIcon={<AdminPanelSettings />}
-                onClick={() => navigate("/admin")}
+    <Container component="main" maxWidth="xl">
+      {/* Skip to main content link */}
+      <a
+        href="#dashboard-content"
+        style={{
+          position: "absolute",
+          left: "-10000px",
+          top: "auto",
+          width: "1px",
+          height: "1px",
+          overflow: "hidden",
+        }}
+        onFocus={(e) => {
+          e.target.style.left = "6px";
+          e.target.style.top = "6px";
+          e.target.style.width = "auto";
+          e.target.style.height = "auto";
+          e.target.style.overflow = "visible";
+        }}
+        onBlur={(e) => {
+          e.target.style.left = "-10000px";
+          e.target.style.top = "auto";
+          e.target.style.width = "1px";
+          e.target.style.height = "1px";
+          e.target.style.overflow = "hidden";
+        }}
+      >
+        Skip to dashboard content
+      </a>
+
+      <NavigationHeader
+        title={t("navigation.dashboard")}
+        subtitle={t("dashboard.subtitle")}
+      />
+
+      <Box id="dashboard-content" role="main" aria-labelledby="dashboard-title">
+        {error && (
+          <Alert
+            severity="error"
+            sx={{ mb: 3 }}
+            role="alert"
+            aria-live="assertive"
+          >
+            {error}
+          </Alert>
+        )}
+
+        {/* Statistics Cards */}
+        <Box component="section" aria-labelledby="stats-title">
+          <Typography
+            variant="h5"
+            component="h2"
+            id="stats-title"
+            sx={{
+              mb: 3,
+              color: "text.primary",
+              fontWeight: 600,
+            }}
+          >
+            {t("dashboard.statistics")}
+          </Typography>
+          <Grid container spacing={3} sx={{ mb: 4 }}>
+            <Grid item xs={12} sm={6} md={3}>
+              <Card
+                role="article"
+                aria-labelledby="game-series-stat"
+                sx={{
+                  "&:focus-within": {
+                    outline: "2px solid",
+                    outlineColor: "primary.main",
+                    outlineOffset: "2px",
+                  },
+                }}
               >
-                Admin Dashboard
-              </Button>
-            )}
-            <Button
-              variant="outlined"
-              color="primary"
-              onClick={() => navigate("/profile")}
-            >
-              Profile
-            </Button>
-            <Button
-              variant="outlined"
-              color="primary"
-              onClick={() => {
-                localStorage.removeItem("token");
-                localStorage.removeItem("user");
-                navigate("/login");
+                <CardContent>
+                  <Box display="flex" alignItems="center">
+                    <Avatar
+                      sx={{ bgcolor: "primary.main", mr: 2 }}
+                      aria-hidden="true"
+                    >
+                      <Event />
+                    </Avatar>
+                    <Box>
+                      <Typography
+                        variant="h4"
+                        component="div"
+                        id="game-series-stat"
+                        aria-label={`${
+                          stats?.totalGameSeries || 0
+                        } game series`}
+                      >
+                        {stats?.totalGameSeries || 0}
+                      </Typography>
+                      <Typography color="text.secondary">
+                        {t("dashboard.gameSeries")}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            <Grid item xs={12} sm={6} md={3}>
+              <Card
+                role="article"
+                aria-labelledby="total-games-stat"
+                sx={{
+                  "&:focus-within": {
+                    outline: "2px solid",
+                    outlineColor: "primary.main",
+                    outlineOffset: "2px",
+                  },
+                }}
+              >
+                <CardContent>
+                  <Box display="flex" alignItems="center">
+                    <Avatar
+                      sx={{ bgcolor: "secondary.main", mr: 2 }}
+                      aria-hidden="true"
+                    >
+                      <SportsEsports />
+                    </Avatar>
+                    <Box>
+                      <Typography
+                        variant="h4"
+                        component="div"
+                        id="total-games-stat"
+                        aria-label={`${stats?.totalGames || 0} total games`}
+                      >
+                        {stats?.totalGames || 0}
+                      </Typography>
+                      <Typography color="text.secondary">
+                        {t("dashboard.totalGames")}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            <Grid item xs={12} sm={6} md={3}>
+              <Card
+                role="article"
+                aria-labelledby="teams-stat"
+                sx={{
+                  "&:focus-within": {
+                    outline: "2px solid",
+                    outlineColor: "primary.main",
+                    outlineOffset: "2px",
+                  },
+                }}
+              >
+                <CardContent>
+                  <Box display="flex" alignItems="center">
+                    <Avatar
+                      sx={{ bgcolor: "success.main", mr: 2 }}
+                      aria-hidden="true"
+                    >
+                      <People />
+                    </Avatar>
+                    <Box>
+                      <Typography
+                        variant="h4"
+                        component="div"
+                        id="teams-stat"
+                        aria-label={`${stats?.totalTeams || 0} teams`}
+                      >
+                        {stats?.totalTeams || 0}
+                      </Typography>
+                      <Typography color="text.secondary">
+                        {t("dashboard.teams")}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            <Grid item xs={12} sm={6} md={3}>
+              <Card
+                role="article"
+                aria-labelledby="upcoming-games-stat"
+                sx={{
+                  "&:focus-within": {
+                    outline: "2px solid",
+                    outlineColor: "primary.main",
+                    outlineOffset: "2px",
+                  },
+                }}
+              >
+                <CardContent>
+                  <Box display="flex" alignItems="center">
+                    <Avatar
+                      sx={{ bgcolor: "warning.main", mr: 2 }}
+                      aria-hidden="true"
+                    >
+                      <CalendarToday />
+                    </Avatar>
+                    <Box>
+                      <Typography
+                        variant="h4"
+                        component="div"
+                        id="upcoming-games-stat"
+                        aria-label={`${
+                          stats?.upcomingGames || 0
+                        } upcoming games`}
+                      >
+                        {stats?.upcomingGames || 0}
+                      </Typography>
+                      <Typography color="text.secondary">
+                        {t("dashboard.upcomingGames")}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
+        </Box>
+
+        <Grid container spacing={3}>
+          {/* Quick Actions */}
+          <Grid item xs={12} md={4}>
+            <Card
+              role="region"
+              aria-labelledby="quick-actions-title"
+              sx={{
+                "&:focus-within": {
+                  outline: "2px solid",
+                  outlineColor: "primary.main",
+                  outlineOffset: "2px",
+                },
               }}
             >
-              Logout
-            </Button>
-          </Box>
-        </Box>
+              <CardContent>
+                <Typography
+                  variant="h6"
+                  component="h3"
+                  id="quick-actions-title"
+                  gutterBottom
+                  sx={{
+                    color: "text.primary",
+                    fontWeight: 600,
+                  }}
+                >
+                  {t("dashboard.quickActions")}
+                </Typography>
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                  <Button
+                    variant="contained"
+                    startIcon={<Add aria-hidden="true" />}
+                    onClick={() => navigate("/game-series")}
+                    fullWidth
+                    aria-label={`${t(
+                      "dashboard.createGameSeries"
+                    )} - Create a new game series`}
+                    sx={{
+                      minHeight: "48px",
+                      "&:focus": {
+                        outline: "2px solid",
+                        outlineColor: "primary.main",
+                        outlineOffset: "2px",
+                      },
+                    }}
+                  >
+                    {t("dashboard.createGameSeries")}
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    startIcon={<Group aria-hidden="true" />}
+                    onClick={() => navigate("/teams")}
+                    fullWidth
+                    aria-label={`${t("dashboard.manageTeams")} - Manage teams`}
+                    sx={{
+                      minHeight: "48px",
+                      "&:focus": {
+                        outline: "2px solid",
+                        outlineColor: "primary.main",
+                        outlineOffset: "2px",
+                      },
+                    }}
+                  >
+                    {t("dashboard.manageTeams")}
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    startIcon={<CalendarToday aria-hidden="true" />}
+                    onClick={() => navigate("/game-series")}
+                    fullWidth
+                    aria-label={`${t(
+                      "dashboard.viewAllSeries"
+                    )} - View all game series`}
+                    sx={{
+                      minHeight: "48px",
+                      "&:focus": {
+                        outline: "2px solid",
+                        outlineColor: "primary.main",
+                        outlineOffset: "2px",
+                      },
+                    }}
+                  >
+                    {t("dashboard.viewAllSeries")}
+                  </Button>
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          {/* Upcoming Games */}
+          <Grid item xs={12} md={4}>
+            <Card
+              role="region"
+              aria-labelledby="upcoming-games-title"
+              sx={{
+                "&:focus-within": {
+                  outline: "2px solid",
+                  outlineColor: "primary.main",
+                  outlineOffset: "2px",
+                },
+              }}
+            >
+              <CardContent>
+                <Typography
+                  variant="h6"
+                  component="h3"
+                  id="upcoming-games-title"
+                  gutterBottom
+                  sx={{
+                    color: "text.primary",
+                    fontWeight: 600,
+                  }}
+                >
+                  {t("dashboard.upcomingGames")}
+                </Typography>
+                <List dense aria-label={t("dashboard.upcomingGamesList")}>
+                  {upcomingGames.slice(0, 3).map((game) => (
+                    <ListItem
+                      key={game.id}
+                      divider
+                      role="listitem"
+                      aria-labelledby={`game-${game.id}-title`}
+                    >
+                      <ListItemIcon>
+                        <SportsEsports color="primary" aria-hidden="true" />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary={
+                          <Typography
+                            id={`game-${game.id}-title`}
+                            component="span"
+                            variant="body1"
+                            sx={{ fontWeight: 500 }}
+                          >
+                            {game.title}
+                          </Typography>
+                        }
+                        secondary={
+                          <React.Fragment>
+                            <Typography
+                              variant="body2"
+                              color="text.secondary"
+                              component="span"
+                              display="block"
+                            >
+                              {formatGameDate(game.date, game.time)}
+                            </Typography>
+                            <Typography
+                              variant="body2"
+                              color="text.secondary"
+                              component="span"
+                              display="block"
+                            >
+                              {game.seriesName}
+                            </Typography>
+                            <Box sx={{ mt: 1 }} role="group" aria-label="Teams">
+                              {game.teams.map((team, index) => (
+                                <Chip
+                                  key={index}
+                                  label={team}
+                                  size="small"
+                                  sx={{ mr: 0.5, mb: 0.5 }}
+                                  aria-label={`Team: ${team}`}
+                                />
+                              ))}
+                            </Box>
+                          </React.Fragment>
+                        }
+                      />
+                    </ListItem>
+                  ))}
+                </List>
+                {upcomingGames.length > 3 && (
+                  <Button
+                    variant="text"
+                    onClick={() => navigate("/game-series")}
+                    fullWidth
+                    aria-label={`${t(
+                      "dashboard.viewAllGames"
+                    )} - View all upcoming games`}
+                    sx={{
+                      minHeight: "44px",
+                      "&:focus": {
+                        outline: "2px solid",
+                        outlineColor: "primary.main",
+                        outlineOffset: "2px",
+                      },
+                    }}
+                  >
+                    {t("dashboard.viewAllGames")}
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+          </Grid>
+
+          {/* Recent Activity */}
+          <Grid item xs={12} md={4}>
+            <Card
+              role="region"
+              aria-labelledby="recent-activity-title"
+              sx={{
+                "&:focus-within": {
+                  outline: "2px solid",
+                  outlineColor: "primary.main",
+                  outlineOffset: "2px",
+                },
+              }}
+            >
+              <CardContent>
+                <Typography
+                  variant="h6"
+                  component="h3"
+                  id="recent-activity-title"
+                  gutterBottom
+                  sx={{
+                    color: "text.primary",
+                    fontWeight: 600,
+                  }}
+                >
+                  {t("dashboard.recentActivity")}
+                </Typography>
+                <List dense aria-label={t("dashboard.recentActivityList")}>
+                  {recentActivity.slice(0, 4).map((activity) => (
+                    <ListItem
+                      key={activity.id}
+                      divider
+                      role="listitem"
+                      aria-labelledby={`activity-${activity.id}-title`}
+                    >
+                      <ListItemIcon>
+                        {getActivityIcon(activity.type)}
+                      </ListItemIcon>
+                      <ListItemText
+                        primary={
+                          <Typography
+                            id={`activity-${activity.id}-title`}
+                            component="span"
+                            variant="body1"
+                            sx={{ fontWeight: 500 }}
+                          >
+                            {activity.title}
+                          </Typography>
+                        }
+                        secondary={
+                          <React.Fragment>
+                            <Typography
+                              variant="body2"
+                              color="text.secondary"
+                              component="span"
+                              display="block"
+                            >
+                              {activity.description}
+                            </Typography>
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              component="span"
+                              display="block"
+                            >
+                              {formatDate(activity.timestamp)}
+                            </Typography>
+                          </React.Fragment>
+                        }
+                      />
+                    </ListItem>
+                  ))}
+                </List>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+
+        {/* Announcement region for dynamic content */}
+        <div
+          aria-live="polite"
+          aria-atomic="true"
+          style={{
+            position: "absolute",
+            left: "-10000px",
+            width: "1px",
+            height: "1px",
+            overflow: "hidden",
+          }}
+        >
+          {/* Screen reader announcements will be inserted here */}
+        </div>
       </Box>
-
-      {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {error}
-        </Alert>
-      )}
-
-      {/* Statistics Cards */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Box display="flex" alignItems="center">
-                <Avatar sx={{ bgcolor: "primary.main", mr: 2 }}>
-                  <Event />
-                </Avatar>
-                <Box>
-                  <Typography variant="h4" component="div">
-                    {stats?.totalGameSeries || 0}
-                  </Typography>
-                  <Typography color="text.secondary">Game Series</Typography>
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Box display="flex" alignItems="center">
-                <Avatar sx={{ bgcolor: "secondary.main", mr: 2 }}>
-                  <SportsEsports />
-                </Avatar>
-                <Box>
-                  <Typography variant="h4" component="div">
-                    {stats?.totalGames || 0}
-                  </Typography>
-                  <Typography color="text.secondary">Total Games</Typography>
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Box display="flex" alignItems="center">
-                <Avatar sx={{ bgcolor: "success.main", mr: 2 }}>
-                  <People />
-                </Avatar>
-                <Box>
-                  <Typography variant="h4" component="div">
-                    {stats?.totalTeams || 0}
-                  </Typography>
-                  <Typography color="text.secondary">Teams</Typography>
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Box display="flex" alignItems="center">
-                <Avatar sx={{ bgcolor: "warning.main", mr: 2 }}>
-                  <CalendarToday />
-                </Avatar>
-                <Box>
-                  <Typography variant="h4" component="div">
-                    {stats?.upcomingGames || 0}
-                  </Typography>
-                  <Typography color="text.secondary">Upcoming Games</Typography>
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-
-      <Grid container spacing={3}>
-        {/* Quick Actions */}
-        <Grid item xs={12} md={4}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Quick Actions
-              </Typography>
-              <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                <Button
-                  variant="contained"
-                  startIcon={<Add />}
-                  onClick={() => navigate("/game-series")}
-                  fullWidth
-                >
-                  Create Game Series
-                </Button>
-                <Button
-                  variant="outlined"
-                  startIcon={<Group />}
-                  onClick={() => navigate("/teams")}
-                  fullWidth
-                >
-                  Manage Teams
-                </Button>
-                <Button
-                  variant="outlined"
-                  startIcon={<CalendarToday />}
-                  onClick={() => navigate("/game-series")}
-                  fullWidth
-                >
-                  View All Series
-                </Button>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {/* Upcoming Games */}
-        <Grid item xs={12} md={4}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Upcoming Games
-              </Typography>
-              <List dense>
-                {upcomingGames.slice(0, 3).map((game) => (
-                  <ListItem key={game.id} divider>
-                    <ListItemIcon>
-                      <SportsEsports color="primary" />
-                    </ListItemIcon>
-                    <ListItemText
-                      primary={game.title}
-                      secondary={
-                        <Box>
-                          <Typography
-                            variant="body2"
-                            color="text.secondary"
-                            component="span"
-                            display="block"
-                          >
-                            {formatGameDate(game.date, game.time)}
-                          </Typography>
-                          <Typography
-                            variant="body2"
-                            color="text.secondary"
-                            component="span"
-                            display="block"
-                          >
-                            {game.seriesName}
-                          </Typography>
-                          <Box sx={{ mt: 1 }}>
-                            {game.teams.map((team, index) => (
-                              <Chip
-                                key={index}
-                                label={team}
-                                size="small"
-                                sx={{ mr: 0.5, mb: 0.5 }}
-                              />
-                            ))}
-                          </Box>
-                        </Box>
-                      }
-                    />
-                  </ListItem>
-                ))}
-              </List>
-              {upcomingGames.length > 3 && (
-                <Button
-                  variant="text"
-                  onClick={() => navigate("/game-series")}
-                  fullWidth
-                >
-                  View All Games
-                </Button>
-              )}
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {/* Recent Activity */}
-        <Grid item xs={12} md={4}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Recent Activity
-              </Typography>
-              <List dense>
-                {recentActivity.slice(0, 4).map((activity) => (
-                  <ListItem key={activity.id} divider>
-                    <ListItemIcon>
-                      {getActivityIcon(activity.type)}
-                    </ListItemIcon>
-                    <ListItemText
-                      primary={activity.title}
-                      secondary={
-                        <Box>
-                          <Typography
-                            variant="body2"
-                            color="text.secondary"
-                            component="span"
-                            display="block"
-                          >
-                            {activity.description}
-                          </Typography>
-                          <Typography
-                            variant="caption"
-                            color="text.secondary"
-                            component="span"
-                            display="block"
-                          >
-                            {formatDate(activity.timestamp)}
-                          </Typography>
-                        </Box>
-                      }
-                    />
-                  </ListItem>
-                ))}
-              </List>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
     </Container>
   );
 }

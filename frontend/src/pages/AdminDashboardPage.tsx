@@ -30,6 +30,8 @@ import {
   Checkbox,
   Tooltip,
   Snackbar,
+  CircularProgress,
+  Avatar,
 } from "@mui/material";
 import {
   Edit as EditIcon,
@@ -40,8 +42,14 @@ import {
   Security as SecurityIcon,
   People as PeopleIcon,
   Search as SearchIcon,
+  Visibility as VisibilityIcon,
 } from "@mui/icons-material";
-import { adminApi, User, UserStats } from "../api/admin";
+import { adminApi } from "../api/admin";
+import type { User, UserStats } from "../api/admin";
+import { useAuth } from "../contexts/AuthContext";
+import { useI18n } from "../contexts/I18nContext";
+import api from "../services/api";
+import NavigationHeader from "../components/NavigationHeader";
 
 const AdminDashboardPage = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -66,6 +74,7 @@ const AdminDashboardPage = () => {
 
   // Dialogs
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [editForm, setEditForm] = useState({
     role: "",
@@ -82,6 +91,8 @@ const AdminDashboardPage = () => {
     message: "",
     severity: "success",
   });
+
+  const { t } = useI18n();
 
   const loadUsers = async () => {
     try {
@@ -146,6 +157,11 @@ const AdminDashboardPage = () => {
       notes: user.admin_notes || "",
     });
     setEditDialogOpen(true);
+  };
+
+  const handleViewUser = (user: User) => {
+    setSelectedUser(user);
+    setViewDialogOpen(true);
   };
 
   const handleSaveEdit = async () => {
@@ -264,333 +280,755 @@ const AdminDashboardPage = () => {
 
   if (error) {
     return (
-      <Container maxWidth="lg" sx={{ mt: 4 }}>
+      <Container maxWidth="lg">
         <Alert severity="error">{error}</Alert>
       </Container>
     );
   }
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      <Typography variant="h4" gutterBottom>
-        Admin Dashboard
-      </Typography>
+    <Container maxWidth="xl">
+      <NavigationHeader title={t("admin.title")} />
 
-      {/* Stats Cards */}
-      {stats && (
-        <Grid container spacing={3} sx={{ mb: 4 }}>
-          <Grid item xs={12} sm={6} md={3}>
-            <Card>
-              <CardContent>
-                <Typography color="textSecondary" gutterBottom>
-                  Total Users
-                </Typography>
-                <Typography variant="h4">{stats.total}</Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <Card>
-              <CardContent>
-                <Typography color="textSecondary" gutterBottom>
-                  Active Users
-                </Typography>
-                <Typography variant="h4">{stats.active}</Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <Card>
-              <CardContent>
-                <Typography color="textSecondary" gutterBottom>
-                  Verified Users
-                </Typography>
-                <Typography variant="h4">{stats.verified}</Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <Card>
-              <CardContent>
-                <Typography color="textSecondary" gutterBottom>
-                  Admins
-                </Typography>
-                <Typography variant="h4">{stats.byRole.admin || 0}</Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-      )}
+      {/* Skip to main content link for screen readers */}
+      <a
+        href="#admin-content"
+        style={{
+          position: "absolute",
+          left: "-10000px",
+          top: "auto",
+          width: "1px",
+          height: "1px",
+          overflow: "hidden",
+        }}
+        onFocus={(e) => {
+          e.target.style.left = "6px";
+          e.target.style.top = "6px";
+          e.target.style.width = "auto";
+          e.target.style.height = "auto";
+          e.target.style.overflow = "visible";
+        }}
+        onBlur={(e) => {
+          e.target.style.left = "-10000px";
+          e.target.style.top = "auto";
+          e.target.style.width = "1px";
+          e.target.style.height = "1px";
+          e.target.style.overflow = "hidden";
+        }}
+      >
+        Skip to main content
+      </a>
 
-      {/* Filters */}
-      <Paper sx={{ p: 2, mb: 2 }}>
-        <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} sm={6} md={3}>
-            <TextField
-              fullWidth
-              label="Search"
-              value={filters.search}
-              onChange={(e) => handleFilterChange("search", e.target.value)}
-              InputProps={{
-                startAdornment: (
-                  <SearchIcon sx={{ mr: 1, color: "text.secondary" }} />
-                ),
+      <Box id="admin-content" role="main" aria-labelledby="admin-title">
+        {error && (
+          <Alert
+            severity="error"
+            sx={{ mb: 3 }}
+            role="alert"
+            aria-live="assertive"
+          >
+            {error}
+          </Alert>
+        )}
+
+        {/* Statistics Cards */}
+        {stats && (
+          <Box component="section" aria-labelledby="stats-title" sx={{ mb: 4 }}>
+            <Typography
+              variant="h5"
+              component="h2"
+              id="stats-title"
+              sx={{
+                mb: 3,
+                color: "text.primary",
+                fontWeight: 600,
               }}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <FormControl fullWidth>
-              <InputLabel>Role</InputLabel>
-              <Select
-                value={filters.role}
-                label="Role"
-                onChange={(e) => handleFilterChange("role", e.target.value)}
-              >
-                <MenuItem value="">All</MenuItem>
-                <MenuItem value="user">User</MenuItem>
-                <MenuItem value="moderator">Moderator</MenuItem>
-                <MenuItem value="admin">Admin</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <FormControl fullWidth>
-              <InputLabel>Status</InputLabel>
-              <Select
-                value={filters.is_active}
-                label="Status"
-                onChange={(e) =>
-                  handleFilterChange("is_active", e.target.value)
-                }
-              >
-                <MenuItem value="">All</MenuItem>
-                <MenuItem value="true">Active</MenuItem>
-                <MenuItem value="false">Inactive</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <FormControl fullWidth>
-              <InputLabel>Verified</InputLabel>
-              <Select
-                value={filters.is_verified}
-                label="Verified"
-                onChange={(e) =>
-                  handleFilterChange("is_verified", e.target.value)
-                }
-              >
-                <MenuItem value="">All</MenuItem>
-                <MenuItem value="true">Verified</MenuItem>
-                <MenuItem value="false">Unverified</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-        </Grid>
-      </Paper>
+            >
+              {t("admin.statistics")}
+            </Typography>
+            <Grid container spacing={3}>
+              <Grid item xs={12} sm={6} md={3}>
+                <Card
+                  role="article"
+                  aria-labelledby="total-users-stat"
+                  sx={{
+                    "&:focus-within": {
+                      outline: "2px solid",
+                      outlineColor: "primary.main",
+                      outlineOffset: "2px",
+                    },
+                  }}
+                >
+                  <CardContent>
+                    <Box display="flex" alignItems="center">
+                      <Avatar
+                        sx={{ bgcolor: "primary.main", mr: 2 }}
+                        aria-hidden="true"
+                      >
+                        <PeopleIcon />
+                      </Avatar>
+                      <Box>
+                        <Typography
+                          variant="h4"
+                          component="div"
+                          id="total-users-stat"
+                          aria-label={`${stats.totalUsers} total users`}
+                        >
+                          {stats.totalUsers}
+                        </Typography>
+                        <Typography color="text.secondary">
+                          {t("admin.totalUsers")}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
 
-      {/* Bulk Actions */}
-      {selectedUsers.length > 0 && (
-        <Paper sx={{ p: 2, mb: 2 }}>
-          <Typography variant="h6" gutterBottom>
-            Bulk Actions ({selectedUsers.length} selected)
-          </Typography>
-          <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-            <Button
-              variant="outlined"
-              onClick={() => handleBulkAction("activate")}
-              startIcon={<CheckCircleIcon />}
-            >
-              Activate
-            </Button>
-            <Button
-              variant="outlined"
-              onClick={() => handleBulkAction("deactivate")}
-              startIcon={<BlockIcon />}
-            >
-              Deactivate
-            </Button>
-            <Button
-              variant="outlined"
-              onClick={() => handleBulkAction("role", "moderator")}
-              startIcon={<SecurityIcon />}
-            >
-              Make Moderator
-            </Button>
-            <Button
-              variant="outlined"
-              onClick={() => handleBulkAction("role", "user")}
-              startIcon={<PersonIcon />}
-            >
-              Make User
-            </Button>
+              <Grid item xs={12} sm={6} md={3}>
+                <Card
+                  role="article"
+                  aria-labelledby="active-users-stat"
+                  sx={{
+                    "&:focus-within": {
+                      outline: "2px solid",
+                      outlineColor: "primary.main",
+                      outlineOffset: "2px",
+                    },
+                  }}
+                >
+                  <CardContent>
+                    <Box display="flex" alignItems="center">
+                      <Avatar
+                        sx={{ bgcolor: "success.main", mr: 2 }}
+                        aria-hidden="true"
+                      >
+                        <CheckCircleIcon />
+                      </Avatar>
+                      <Box>
+                        <Typography
+                          variant="h4"
+                          component="div"
+                          id="active-users-stat"
+                          aria-label={`${stats.activeUsers} active users`}
+                        >
+                          {stats.activeUsers}
+                        </Typography>
+                        <Typography color="text.secondary">
+                          {t("admin.activeUsers")}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
+
+              <Grid item xs={12} sm={6} md={3}>
+                <Card
+                  role="article"
+                  aria-labelledby="verified-users-stat"
+                  sx={{
+                    "&:focus-within": {
+                      outline: "2px solid",
+                      outlineColor: "primary.main",
+                      outlineOffset: "2px",
+                    },
+                  }}
+                >
+                  <CardContent>
+                    <Box display="flex" alignItems="center">
+                      <Avatar
+                        sx={{ bgcolor: "info.main", mr: 2 }}
+                        aria-hidden="true"
+                      >
+                        <SecurityIcon />
+                      </Avatar>
+                      <Box>
+                        <Typography
+                          variant="h4"
+                          component="div"
+                          id="verified-users-stat"
+                          aria-label={`${stats.verifiedUsers} verified users`}
+                        >
+                          {stats.verifiedUsers}
+                        </Typography>
+                        <Typography color="text.secondary">
+                          {t("admin.verifiedUsers")}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
+
+              <Grid item xs={12} sm={6} md={3}>
+                <Card
+                  role="article"
+                  aria-labelledby="admin-users-stat"
+                  sx={{
+                    "&:focus-within": {
+                      outline: "2px solid",
+                      outlineColor: "primary.main",
+                      outlineOffset: "2px",
+                    },
+                  }}
+                >
+                  <CardContent>
+                    <Box display="flex" alignItems="center">
+                      <Avatar
+                        sx={{ bgcolor: "warning.main", mr: 2 }}
+                        aria-hidden="true"
+                      >
+                        <AdminIcon />
+                      </Avatar>
+                      <Box>
+                        <Typography
+                          variant="h4"
+                          component="div"
+                          id="admin-users-stat"
+                          aria-label={`${stats.adminUsers} admin users`}
+                        >
+                          {stats.adminUsers}
+                        </Typography>
+                        <Typography color="text.secondary">
+                          {t("admin.adminUsers")}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
+            </Grid>
           </Box>
-        </Paper>
-      )}
+        )}
 
-      {/* Users Table */}
-      <Paper>
-        <TableContainer>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell padding="checkbox">
-                  <Checkbox
-                    checked={
-                      selectedUsers.length === users.length && users.length > 0
-                    }
-                    indeterminate={
-                      selectedUsers.length > 0 &&
-                      selectedUsers.length < users.length
-                    }
-                    onChange={handleSelectAll}
-                  />
-                </TableCell>
-                <TableCell>User</TableCell>
-                <TableCell>Role</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Verified</TableCell>
-                <TableCell>Created</TableCell>
-                <TableCell>Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {users.map((user) => (
-                <TableRow key={user.id}>
+        {/* Filters */}
+        <Paper
+          sx={{ p: 2, mb: 3 }}
+          role="region"
+          aria-labelledby="filters-title"
+        >
+          <Typography variant="h6" id="filters-title" gutterBottom>
+            {t("admin.filters")}
+          </Typography>
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={6} md={3}>
+              <TextField
+                fullWidth
+                label={t("admin.search")}
+                value={filters.search}
+                onChange={(e) => handleFilterChange("search", e.target.value)}
+                aria-label={`${t("admin.search")} users`}
+                sx={{
+                  "&:focus-within": {
+                    outline: "2px solid",
+                    outlineColor: "primary.main",
+                    outlineOffset: "2px",
+                  },
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <FormControl fullWidth>
+                <InputLabel id="role-filter-label">
+                  {t("admin.role")}
+                </InputLabel>
+                <Select
+                  labelId="role-filter-label"
+                  value={filters.role}
+                  label={t("admin.role")}
+                  onChange={(e) => handleFilterChange("role", e.target.value)}
+                  aria-label={`${t("admin.filterBy")} role`}
+                  sx={{
+                    "&:focus-within": {
+                      outline: "2px solid",
+                      outlineColor: "primary.main",
+                      outlineOffset: "2px",
+                    },
+                  }}
+                >
+                  <MenuItem value="">{t("admin.allRoles")}</MenuItem>
+                  <MenuItem value="user">{t("admin.user")}</MenuItem>
+                  <MenuItem value="moderator">{t("admin.moderator")}</MenuItem>
+                  <MenuItem value="admin">{t("admin.admin")}</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <FormControl fullWidth>
+                <InputLabel id="status-filter-label">
+                  {t("admin.status")}
+                </InputLabel>
+                <Select
+                  labelId="status-filter-label"
+                  value={filters.is_active}
+                  label={t("admin.status")}
+                  onChange={(e) =>
+                    handleFilterChange("is_active", e.target.value)
+                  }
+                  aria-label={`${t("admin.filterBy")} status`}
+                  sx={{
+                    "&:focus-within": {
+                      outline: "2px solid",
+                      outlineColor: "primary.main",
+                      outlineOffset: "2px",
+                    },
+                  }}
+                >
+                  <MenuItem value="">{t("admin.allStatuses")}</MenuItem>
+                  <MenuItem value="true">{t("admin.active")}</MenuItem>
+                  <MenuItem value="false">{t("admin.inactive")}</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <FormControl fullWidth>
+                <InputLabel id="verification-filter-label">
+                  {t("admin.verification")}
+                </InputLabel>
+                <Select
+                  labelId="verification-filter-label"
+                  value={filters.is_verified}
+                  label={t("admin.verification")}
+                  onChange={(e) =>
+                    handleFilterChange("is_verified", e.target.value)
+                  }
+                  aria-label={`${t("admin.filterBy")} verification status`}
+                  sx={{
+                    "&:focus-within": {
+                      outline: "2px solid",
+                      outlineColor: "primary.main",
+                      outlineOffset: "2px",
+                    },
+                  }}
+                >
+                  <MenuItem value="">
+                    {t("admin.allVerificationStatuses")}
+                  </MenuItem>
+                  <MenuItem value="true">{t("admin.verified")}</MenuItem>
+                  <MenuItem value="false">{t("admin.unverified")}</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+          </Grid>
+        </Paper>
+
+        {/* Bulk Actions */}
+        {selectedUsers.length > 0 && (
+          <Paper
+            sx={{ p: 2, mb: 3 }}
+            role="region"
+            aria-labelledby="bulk-actions-title"
+          >
+            <Typography variant="h6" id="bulk-actions-title" gutterBottom>
+              {t("admin.bulkActions")} ({selectedUsers.length}{" "}
+              {t("admin.selected")})
+            </Typography>
+            <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+              <Button
+                variant="outlined"
+                onClick={() => handleBulkAction("activate")}
+                aria-label={`${t("admin.activate")} selected users`}
+                sx={{
+                  minHeight: "44px",
+                  "&:focus": {
+                    outline: "2px solid",
+                    outlineColor: "primary.main",
+                    outlineOffset: "2px",
+                  },
+                }}
+              >
+                {t("admin.activate")}
+              </Button>
+              <Button
+                variant="outlined"
+                onClick={() => handleBulkAction("deactivate")}
+                aria-label={`${t("admin.deactivate")} selected users`}
+                sx={{
+                  minHeight: "44px",
+                  "&:focus": {
+                    outline: "2px solid",
+                    outlineColor: "primary.main",
+                    outlineOffset: "2px",
+                  },
+                }}
+              >
+                {t("admin.deactivate")}
+              </Button>
+            </Box>
+          </Paper>
+        )}
+
+        {/* Users Table */}
+        <Paper role="region" aria-labelledby="users-table-title">
+          <TableContainer>
+            <Table aria-label={t("admin.usersTableDescription")}>
+              <TableHead>
+                <TableRow>
                   <TableCell padding="checkbox">
                     <Checkbox
-                      checked={selectedUsers.includes(user.id)}
-                      onChange={() => handleSelectUser(user.id)}
+                      indeterminate={
+                        selectedUsers.length > 0 &&
+                        selectedUsers.length < users.length
+                      }
+                      checked={
+                        selectedUsers.length === users.length &&
+                        users.length > 0
+                      }
+                      onChange={handleSelectAll}
+                      aria-label={`${t("admin.selectAll")} users`}
+                      sx={{
+                        "&:focus": {
+                          outline: "2px solid",
+                          outlineColor: "primary.main",
+                          outlineOffset: "2px",
+                        },
+                      }}
                     />
                   </TableCell>
-                  <TableCell>
-                    <Box>
-                      <Typography variant="subtitle2">
-                        {user.username}
-                      </Typography>
-                      <Typography variant="body2" color="textSecondary">
-                        {user.email}
-                      </Typography>
-                    </Box>
+                  <TableCell scope="col" id="name-header">
+                    {t("admin.name")}
                   </TableCell>
-                  <TableCell>
-                    <Chip
-                      label={user.role}
-                      color={getRoleColor(user.role)}
-                      size="small"
-                    />
+                  <TableCell scope="col" id="email-header">
+                    {t("admin.email")}
                   </TableCell>
-                  <TableCell>
-                    <Chip
-                      label={user.is_active ? "Active" : "Inactive"}
-                      color={getStatusColor(user.is_active)}
-                      size="small"
-                    />
+                  <TableCell scope="col" id="role-header">
+                    {t("admin.role")}
                   </TableCell>
-                  <TableCell>
-                    <Chip
-                      label={user.is_verified ? "Verified" : "Unverified"}
-                      color={user.is_verified ? "success" : "warning"}
-                      size="small"
-                    />
+                  <TableCell scope="col" id="status-header">
+                    {t("admin.status")}
                   </TableCell>
-                  <TableCell>
-                    {new Date(user.created_at).toLocaleDateString()}
+                  <TableCell scope="col" id="verification-header">
+                    {t("admin.verification")}
                   </TableCell>
-                  <TableCell>
-                    <Box sx={{ display: "flex", gap: 1 }}>
-                      <Tooltip title="Edit User">
-                        <IconButton
-                          size="small"
-                          onClick={() => handleEditUser(user)}
-                        >
-                          <EditIcon />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip
-                        title={user.is_active ? "Deactivate" : "Activate"}
-                      >
-                        <IconButton
-                          size="small"
-                          onClick={() => handleToggleStatus(user.id)}
-                        >
-                          {user.is_active ? <BlockIcon /> : <CheckCircleIcon />}
-                        </IconButton>
-                      </Tooltip>
-                    </Box>
+                  <TableCell scope="col" id="actions-header">
+                    {t("admin.actions")}
                   </TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-        <TablePagination
-          rowsPerPageOptions={[5, 10, 25]}
-          component="div"
-          count={totalUsers}
-          rowsPerPage={rowsPerPage}
-          page={page}
-          onPageChange={handlePageChange}
-          onRowsPerPageChange={handleRowsPerPageChange}
-        />
-      </Paper>
+              </TableHead>
+              <TableBody>
+                {users.map((user) => (
+                  <TableRow key={user.id}>
+                    <TableCell padding="checkbox">
+                      <Checkbox
+                        checked={selectedUsers.includes(user.id)}
+                        onChange={() => handleSelectUser(user.id)}
+                        aria-label={`${t("admin.select")} ${user.username}`}
+                        sx={{
+                          "&:focus": {
+                            outline: "2px solid",
+                            outlineColor: "primary.main",
+                            outlineOffset: "2px",
+                          },
+                        }}
+                      />
+                    </TableCell>
+                    <TableCell headers="name-header">{user.username}</TableCell>
+                    <TableCell headers="email-header">{user.email}</TableCell>
+                    <TableCell headers="role-header">
+                      <Chip
+                        label={user.role}
+                        color={getRoleColor(user.role)}
+                        size="small"
+                        aria-label={`Role: ${user.role}`}
+                      />
+                    </TableCell>
+                    <TableCell headers="status-header">
+                      <Chip
+                        label={
+                          user.is_active
+                            ? t("admin.active")
+                            : t("admin.inactive")
+                        }
+                        color={getStatusColor(user.is_active)}
+                        size="small"
+                        aria-label={`Status: ${
+                          user.is_active
+                            ? t("admin.active")
+                            : t("admin.inactive")
+                        }`}
+                      />
+                    </TableCell>
+                    <TableCell headers="verification-header">
+                      <Chip
+                        label={
+                          user.is_verified
+                            ? t("admin.verified")
+                            : t("admin.unverified")
+                        }
+                        color={user.is_verified ? "success" : "warning"}
+                        size="small"
+                        aria-label={`Verification: ${
+                          user.is_verified
+                            ? t("admin.verified")
+                            : t("admin.unverified")
+                        }`}
+                      />
+                    </TableCell>
+                    <TableCell headers="actions-header">
+                      <Box
+                        role="group"
+                        aria-label={`Actions for ${user.username}`}
+                      >
+                        <Tooltip title={t("admin.viewUser")}>
+                          <IconButton
+                            onClick={() => handleViewUser(user)}
+                            color="primary"
+                            size="small"
+                            aria-label={`${t("admin.viewUser")} - ${
+                              user.username
+                            }`}
+                            sx={{
+                              minWidth: "44px",
+                              minHeight: "44px",
+                              "&:focus": {
+                                outline: "2px solid",
+                                outlineColor: "primary.main",
+                                outlineOffset: "2px",
+                              },
+                            }}
+                          >
+                            <VisibilityIcon aria-hidden="true" />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title={t("admin.editUser")}>
+                          <IconButton
+                            onClick={() => handleEditUser(user)}
+                            color="primary"
+                            size="small"
+                            aria-label={`${t("admin.editUser")} - ${
+                              user.username
+                            }`}
+                            sx={{
+                              minWidth: "44px",
+                              minHeight: "44px",
+                              "&:focus": {
+                                outline: "2px solid",
+                                outlineColor: "primary.main",
+                                outlineOffset: "2px",
+                              },
+                            }}
+                          >
+                            <EditIcon aria-hidden="true" />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip
+                          title={
+                            user.is_active
+                              ? t("admin.deactivate")
+                              : t("admin.activate")
+                          }
+                        >
+                          <IconButton
+                            onClick={() => handleToggleStatus(user.id)}
+                            color={user.is_active ? "warning" : "success"}
+                            size="small"
+                            aria-label={`${
+                              user.is_active
+                                ? t("admin.deactivate")
+                                : t("admin.activate")
+                            } - ${user.username}`}
+                            sx={{
+                              minWidth: "44px",
+                              minHeight: "44px",
+                              "&:focus": {
+                                outline: "2px solid",
+                                outlineColor: "primary.main",
+                                outlineOffset: "2px",
+                              },
+                            }}
+                          >
+                            {user.is_active ? (
+                              <BlockIcon aria-hidden="true" />
+                            ) : (
+                              <CheckCircleIcon aria-hidden="true" />
+                            )}
+                          </IconButton>
+                        </Tooltip>
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+          <TablePagination
+            component="div"
+            count={totalUsers}
+            page={page}
+            onPageChange={handlePageChange}
+            rowsPerPage={rowsPerPage}
+            onRowsPerPageChange={handleRowsPerPageChange}
+            aria-label={t("admin.tablePagination")}
+          />
+        </Paper>
 
-      {/* Edit User Dialog */}
-      <Dialog
-        open={editDialogOpen}
-        onClose={() => setEditDialogOpen(false)}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>Edit User</DialogTitle>
-        <DialogContent>
-          <Box sx={{ pt: 2 }}>
-            <FormControl fullWidth sx={{ mb: 2 }}>
-              <InputLabel>Role</InputLabel>
+        {/* Edit User Dialog */}
+        <Dialog
+          open={editDialogOpen}
+          onClose={() => setEditDialogOpen(false)}
+          maxWidth="sm"
+          fullWidth
+          aria-labelledby="edit-dialog-title"
+          aria-describedby="edit-dialog-description"
+        >
+          <DialogTitle id="edit-dialog-title">
+            {t("admin.editUser")} - {selectedUser?.username}
+          </DialogTitle>
+          <DialogContent id="edit-dialog-description">
+            <FormControl fullWidth sx={{ mt: 1 }}>
+              <InputLabel id="role-select-label">{t("admin.role")}</InputLabel>
               <Select
+                labelId="role-select-label"
                 value={editForm.role}
-                label="Role"
+                label={t("admin.role")}
                 onChange={(e) =>
-                  setEditForm((prev) => ({ ...prev, role: e.target.value }))
+                  setEditForm({ ...editForm, role: e.target.value })
                 }
+                aria-required="true"
+                aria-describedby="role-help"
+                sx={{
+                  "&:focus-within": {
+                    outline: "2px solid",
+                    outlineColor: "primary.main",
+                    outlineOffset: "2px",
+                  },
+                }}
               >
-                <MenuItem value="user">User</MenuItem>
-                <MenuItem value="moderator">Moderator</MenuItem>
-                <MenuItem value="admin">Admin</MenuItem>
+                <MenuItem value="user">{t("admin.user")}</MenuItem>
+                <MenuItem value="moderator">{t("admin.moderator")}</MenuItem>
+                <MenuItem value="admin">{t("admin.admin")}</MenuItem>
               </Select>
             </FormControl>
             <TextField
               fullWidth
-              label="Admin Notes"
-              multiline
-              rows={4}
+              label={t("admin.notes")}
               value={editForm.notes}
               onChange={(e) =>
-                setEditForm((prev) => ({ ...prev, notes: e.target.value }))
+                setEditForm({ ...editForm, notes: e.target.value })
               }
+              multiline
+              rows={3}
+              aria-describedby="notes-help"
+              sx={{
+                mt: 2,
+                "&:focus-within": {
+                  outline: "2px solid",
+                  outlineColor: "primary.main",
+                  outlineOffset: "2px",
+                },
+              }}
             />
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setEditDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleSaveEdit} variant="contained">
-            Save
-          </Button>
-        </DialogActions>
-      </Dialog>
+          </DialogContent>
+          <DialogActions>
+            <Button
+              onClick={() => setEditDialogOpen(false)}
+              aria-label={t("common.cancel")}
+              sx={{
+                minHeight: "44px",
+                "&:focus": {
+                  outline: "2px solid",
+                  outlineColor: "primary.main",
+                  outlineOffset: "2px",
+                },
+              }}
+            >
+              {t("common.cancel")}
+            </Button>
+            <Button
+              onClick={handleSaveEdit}
+              variant="contained"
+              aria-label={t("admin.saveChanges")}
+              sx={{
+                minHeight: "44px",
+                "&:focus": {
+                  outline: "2px solid",
+                  outlineColor: "primary.main",
+                  outlineOffset: "2px",
+                },
+              }}
+            >
+              {t("admin.saveChanges")}
+            </Button>
+          </DialogActions>
+        </Dialog>
 
-      {/* Snackbar */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={6000}
-        onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
-      >
-        <Alert
-          severity={snackbar.severity}
-          onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
+        {/* View User Dialog */}
+        <Dialog
+          open={viewDialogOpen}
+          onClose={() => setViewDialogOpen(false)}
+          maxWidth="sm"
+          fullWidth
+          aria-labelledby="view-dialog-title"
+          aria-describedby="view-dialog-description"
         >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
+          <DialogTitle id="view-dialog-title">
+            {t("admin.viewUser")} - {selectedUser?.username}
+          </DialogTitle>
+          <DialogContent id="view-dialog-description">
+            {selectedUser && (
+              <Box>
+                <Typography variant="body1" gutterBottom>
+                  <strong>{t("admin.email")}:</strong> {selectedUser.email}
+                </Typography>
+                <Typography variant="body1" gutterBottom>
+                  <strong>{t("admin.role")}:</strong> {selectedUser.role}
+                </Typography>
+                <Typography variant="body1" gutterBottom>
+                  <strong>{t("admin.status")}:</strong>{" "}
+                  {selectedUser.is_active
+                    ? t("admin.active")
+                    : t("admin.inactive")}
+                </Typography>
+                <Typography variant="body1" gutterBottom>
+                  <strong>{t("admin.verification")}:</strong>{" "}
+                  {selectedUser.is_verified
+                    ? t("admin.verified")
+                    : t("admin.unverified")}
+                </Typography>
+                {selectedUser.admin_notes && (
+                  <Typography variant="body1" gutterBottom>
+                    <strong>{t("admin.notes")}:</strong>{" "}
+                    {selectedUser.admin_notes}
+                  </Typography>
+                )}
+              </Box>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button
+              onClick={() => setViewDialogOpen(false)}
+              aria-label={t("common.close")}
+              sx={{
+                minHeight: "44px",
+                "&:focus": {
+                  outline: "2px solid",
+                  outlineColor: "primary.main",
+                  outlineOffset: "2px",
+                },
+              }}
+            >
+              {t("common.close")}
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Snackbar for notifications */}
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={6000}
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          aria-live="polite"
+        >
+          <Alert
+            onClose={() => setSnackbar({ ...snackbar, open: false })}
+            severity={snackbar.severity}
+            sx={{ width: "100%" }}
+          >
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
+      </Box>
     </Container>
   );
 };

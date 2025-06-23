@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useRef } from "react";
 import type { ChangeEvent } from "react";
 import type { GameSeries } from "../types/gameSeries";
 import {
@@ -16,6 +16,11 @@ import {
   CircularProgress,
 } from "@mui/material";
 import api from "../services/api";
+import {
+  Add as AddIcon,
+  CalendarToday as CalendarTodayIcon,
+  Schedule as ScheduleIcon,
+} from "@mui/icons-material";
 
 interface GameManagementProps {
   series: GameSeries;
@@ -32,17 +37,21 @@ interface GameFormData {
 }
 
 const GameManagement = ({ series, onSuccess }: GameManagementProps) => {
-  const [open, setOpen] = React.useState<boolean>(false);
-  const [loading, setLoading] = React.useState<boolean>(false);
-  const [error, setError] = React.useState<string | null>(null);
-  const [formData, setFormData] = React.useState<GameFormData>({
+  const [open, setOpen] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [formData, setFormData] = useState<GameFormData>({
     date: "",
-    time: "",
+    time: "14:00",
     location: "",
     opponent: "",
     isHome: true,
     days: [],
   });
+
+  // Refs for input fields
+  const dateInputRef = useRef<HTMLInputElement>(null);
+  const timeInputRef = useRef<HTMLInputElement>(null);
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => {
@@ -50,7 +59,7 @@ const GameManagement = ({ series, onSuccess }: GameManagementProps) => {
     setError(null);
     setFormData({
       date: "",
-      time: "",
+      time: "14:00",
       location: "",
       opponent: "",
       isHome: true,
@@ -76,6 +85,16 @@ const GameManagement = ({ series, onSuccess }: GameManagementProps) => {
   };
 
   const handleBulkCreate = async () => {
+    // Simple client-side validation
+    if (
+      !formData.date ||
+      !formData.time ||
+      !formData.location ||
+      !formData.opponent
+    ) {
+      setError("All fields are required.");
+      return;
+    }
     try {
       setLoading(true);
       setError(null);
@@ -127,7 +146,37 @@ const GameManagement = ({ series, onSuccess }: GameManagementProps) => {
               type="date"
               value={formData.date}
               onChange={handleInputChange}
+              inputRef={dateInputRef}
               InputLabelProps={{ shrink: true }}
+              InputProps={{
+                endAdornment: (
+                  <Box
+                    onClick={() => {
+                      if (dateInputRef.current) {
+                        dateInputRef.current.showPicker();
+                      }
+                    }}
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      cursor: "pointer",
+                      padding: "4px",
+                      borderRadius: "4px",
+                      "&:hover": {
+                        backgroundColor: "rgba(25, 118, 210, 0.08)",
+                      },
+                    }}
+                  >
+                    <CalendarTodayIcon
+                      sx={{
+                        color: "#1976d2",
+                        fontSize: "20px",
+                      }}
+                    />
+                  </Box>
+                ),
+              }}
               fullWidth
             />
 
@@ -137,7 +186,37 @@ const GameManagement = ({ series, onSuccess }: GameManagementProps) => {
               type="time"
               value={formData.time}
               onChange={handleInputChange}
+              inputRef={timeInputRef}
               InputLabelProps={{ shrink: true }}
+              InputProps={{
+                endAdornment: (
+                  <Box
+                    onClick={() => {
+                      if (timeInputRef.current) {
+                        timeInputRef.current.showPicker();
+                      }
+                    }}
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      cursor: "pointer",
+                      padding: "4px",
+                      borderRadius: "4px",
+                      "&:hover": {
+                        backgroundColor: "rgba(25, 118, 210, 0.08)",
+                      },
+                    }}
+                  >
+                    <ScheduleIcon
+                      sx={{
+                        color: "#1976d2",
+                        fontSize: "20px",
+                      }}
+                    />
+                  </Box>
+                ),
+              }}
               fullWidth
             />
 

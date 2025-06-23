@@ -76,6 +76,13 @@ router.get(
     TeamController.getTeam
 );
 
+router.get(
+    '/:id/stats',
+    param('id').isInt().withMessage('Invalid team ID'),
+    validateRequest,
+    TeamController.getTeamStats
+);
+
 router.put(
     '/:id',
     updateTeamValidation,

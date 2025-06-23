@@ -50,6 +50,8 @@ describe('User Routes Integration', () => {
 
     expect(res.body.user).toHaveProperty('id', userId);
     expect(res.body.user).toHaveProperty('email', 'usertest@example.com');
+    expect(res.body.user).toHaveProperty('role');
+    expect(res.body.user).toHaveProperty('is_active');
   });
 
   it('should return 401 when no token is provided', async () => {

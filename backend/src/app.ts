@@ -11,6 +11,8 @@ import gameRoutes from './routes/game.routes';
 import userRoutes from './routes/user.routes';
 import dashboardRoutes from './routes/dashboard.routes';
 import adminRoutes from './routes/admin.routes';
+import advancedSchedulingRoutes from './routes/advanced-scheduling.routes';
+import teamInvitationRoutes from './routes/team-invitations.routes';
 import config from './config/env';
 
 dotenv.config();
@@ -44,19 +46,21 @@ app.use('/uploads', (req, res, next) => {
   next();
 }, express.static(path.join(__dirname, '../uploads')));
 
+// Health check endpoint (must be before game routes)
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'OK', timestamp: new Date().toISOString() });
+});
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/teams', teamRoutes);
+app.use('/api/team-invitations', teamInvitationRoutes);
 app.use('/api/game-series', gameSeriesRoutes);
 app.use('/api', gameRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/admin', adminRoutes);
-
-// Health check endpoint
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', timestamp: new Date().toISOString() });
-});
+app.use('/api/advanced-scheduling', advancedSchedulingRoutes);
 
 // Basic route for testing
 app.get('/', (req, res) => {

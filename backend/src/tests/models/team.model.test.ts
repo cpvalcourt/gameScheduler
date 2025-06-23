@@ -1,12 +1,14 @@
 import { TeamModel } from '../../models/team.model';
 import { pool } from '../../config/database';
 
+// Mock the database pool
 jest.mock('../../config/database', () => ({
   pool: {
     execute: jest.fn(),
-    getConnection: jest.fn()
-  }
+  },
 }));
+
+const mockedPool = pool as jest.Mocked<typeof pool>;
 
 describe('TeamModel', () => {
   beforeEach(() => {
@@ -14,7 +16,13 @@ describe('TeamModel', () => {
   });
 
   describe('create', () => {
-    it('should create a new team', async () => {
+    it('should create a team successfully', async () => {
+      const teamData = {
+        name: 'Test Team',
+        description: 'A test team',
+        created_by: 1
+      };
+
       const mockTeam = {
         id: 1,
         name: 'Test Team',
@@ -23,16 +31,17 @@ describe('TeamModel', () => {
         created_at: new Date(),
         updated_at: new Date()
       };
-      (pool.execute as jest.Mock).mockResolvedValueOnce([{ insertId: 1 }]);
-      (pool.execute as jest.Mock).mockResolvedValueOnce([[mockTeam]]);
 
-      const result = await TeamModel.create({
-        name: 'Test Team',
-        description: 'A test team',
-        created_by: 1
-      });
+      mockedPool.execute
+        .mockResolvedValueOnce([{ insertId: 1 }] as any)
+        .mockResolvedValueOnce([[mockTeam]] as any);
 
-      expect(pool.execute).toHaveBeenCalledTimes(2);
+      const result = await TeamModel.create(teamData);
+
+      expect(mockedPool.execute).toHaveBeenCalledWith(
+        'INSERT INTO TEAMS (name, description, created_by) VALUES (?, ?, ?)',
+        [teamData.name, teamData.description, teamData.created_by]
+      );
       expect(result).toEqual(mockTeam);
     });
   });
@@ -47,153 +56,291 @@ describe('TeamModel', () => {
         created_at: new Date(),
         updated_at: new Date()
       };
-      (pool.execute as jest.Mock).mockResolvedValueOnce([[mockTeam]]);
+
+      const mockResult = [[mockTeam]];
+
+      mockedPool.execute.mockResolvedValue(mockResult as any);
 
       const result = await TeamModel.findById(1);
-      expect(pool.execute).toHaveBeenCalledWith('SELECT id, name, description, created_by, created_at, updated_at FROM TEAMS WHERE id = ?', [1]);
+
+      expect(mockedPool.execute).toHaveBeenCalledWith(
+        'SELECT id, name, description, created_by, created_at, updated_at FROM TEAMS WHERE id = ?',
+        [1]
+      );
       expect(result).toEqual(mockTeam);
     });
-    it('should return null if not found', async () => {
-      (pool.execute as jest.Mock).mockResolvedValueOnce([[]]);
+
+    it('should return null if team not found', async () => {
+      const mockResult = [[]];
+
+      mockedPool.execute.mockResolvedValue(mockResult as any);
+
       const result = await TeamModel.findById(999);
-      expect(result).toBeNull();
-    });
-  });
 
-  describe('update', () => {
-    it('should update a team', async () => {
-      const mockTeam = {
-        id: 1,
-        name: 'Updated Team',
-        description: 'Updated desc',
-        created_by: 1,
-        created_at: new Date(),
-        updated_at: new Date()
-      };
-      (pool.execute as jest.Mock).mockResolvedValueOnce([{ affectedRows: 1 }]);
-      (pool.execute as jest.Mock).mockResolvedValueOnce([[mockTeam]]);
-      const result = await TeamModel.update(1, { name: 'Updated Team', description: 'Updated desc' });
-      expect(pool.execute).toHaveBeenCalledTimes(2);
-      expect(result).toEqual(mockTeam);
-    });
-    it('should return null if not found', async () => {
-      (pool.execute as jest.Mock).mockResolvedValueOnce([{ affectedRows: 0 }]);
-      (pool.execute as jest.Mock).mockResolvedValueOnce([[]]);
-      const result = await TeamModel.update(999, { name: 'Updated Team' });
       expect(result).toBeNull();
-    });
-  });
-
-  describe('delete', () => {
-    it('should delete a team', async () => {
-      (pool.execute as jest.Mock).mockResolvedValueOnce([{ affectedRows: 1 }]); // TEAM_MEMBERS
-      (pool.execute as jest.Mock).mockResolvedValueOnce([{ affectedRows: 1 }]); // TEAMS
-      await expect(TeamModel.delete(1)).resolves.toBeUndefined();
-      expect(pool.execute).toHaveBeenNthCalledWith(1, 'DELETE FROM TEAM_MEMBERS WHERE team_id = ?', [1]);
-      expect(pool.execute).toHaveBeenNthCalledWith(2, 'DELETE FROM TEAMS WHERE id = ?', [1]);
-    });
-    it('should return void if not found', async () => {
-      (pool.execute as jest.Mock).mockResolvedValueOnce([{ affectedRows: 0 }]); // TEAM_MEMBERS
-      (pool.execute as jest.Mock).mockResolvedValueOnce([{ affectedRows: 0 }]); // TEAMS
-      await expect(TeamModel.delete(999)).resolves.toBeUndefined();
     });
   });
 
   describe('getUserTeams', () => {
-    it('should get all teams for a user', async () => {
+    it('should get teams for a user', async () => {
       const mockTeams = [
         {
           id: 1,
-          name: 'Test Team',
-          description: 'A test team',
+          name: 'Team 1',
+          description: 'Team 1 description',
+          created_by: 1,
+          created_at: new Date(),
+          updated_at: new Date()
+        },
+        {
+          id: 2,
+          name: 'Team 2',
+          description: 'Team 2 description',
           created_by: 1,
           created_at: new Date(),
           updated_at: new Date()
         }
       ];
-      (pool.execute as jest.Mock).mockResolvedValueOnce([mockTeams]);
+
+      const mockResult = [mockTeams];
+
+      mockedPool.execute.mockResolvedValue(mockResult as any);
+
       const result = await TeamModel.getUserTeams(1);
-      expect(pool.execute).toHaveBeenCalledWith(
-        `SELECT t.id, t.name, t.description, t.created_by, t.created_at, t.updated_at\n             FROM TEAMS t\n             JOIN TEAM_MEMBERS tm ON t.id = tm.team_id\n             WHERE tm.user_id = ?`,
+
+      expect(mockedPool.execute).toHaveBeenCalledWith(
+        expect.stringContaining('SELECT t.id, t.name, t.description, t.created_by, t.created_at, t.updated_at'),
+        [1]
+      );
+      expect(mockedPool.execute).toHaveBeenCalledWith(
+        expect.stringContaining('FROM TEAMS t'),
+        [1]
+      );
+      expect(mockedPool.execute).toHaveBeenCalledWith(
+        expect.stringContaining('JOIN TEAM_MEMBERS tm ON t.id = tm.team_id'),
+        [1]
+      );
+      expect(mockedPool.execute).toHaveBeenCalledWith(
+        expect.stringContaining('WHERE tm.user_id = ?'),
         [1]
       );
       expect(result).toEqual(mockTeams);
     });
   });
 
-  describe('member management', () => {
-    beforeEach(() => {
-      jest.clearAllMocks();
-    });
+  describe('update', () => {
+    it('should update a team successfully', async () => {
+      const updateData = {
+        name: 'Updated Team',
+        description: 'Updated description'
+      };
 
-    describe('addMember', () => {
-      it('should add a member to a team', async () => {
-        (pool.execute as jest.Mock).mockResolvedValueOnce([{ insertId: 1 }]);
-        (pool.execute as jest.Mock).mockResolvedValueOnce([[{ id: 1, team_id: 1, user_id: 2, role: 'player', created_at: '2023-10-01T14:00:00Z', updated_at: '2023-10-01T14:00:00Z' }]]);
-        const result = await TeamModel.addMember(1, 2, 'player');
-        expect(result).toEqual({
+      const mockTeam = {
+        id: 1,
+        ...updateData,
+        created_by: 1,
+        created_at: new Date(),
+        updated_at: new Date()
+      };
+
+      mockedPool.execute
+        .mockResolvedValueOnce([{ affectedRows: 1 }] as any)
+        .mockResolvedValueOnce([[mockTeam]] as any);
+
+      const result = await TeamModel.update(1, updateData);
+
+      expect(mockedPool.execute).toHaveBeenCalledWith(
+        'UPDATE TEAMS SET name = ?, description = ? WHERE id = ?',
+        [updateData.name, updateData.description, 1]
+      );
+      expect(result).toEqual(mockTeam);
+    });
+  });
+
+  describe('delete', () => {
+    it('should delete a team successfully', async () => {
+      const mockResult = [{ affectedRows: 1 }];
+
+      mockedPool.execute.mockResolvedValue(mockResult as any);
+
+      await TeamModel.delete(1);
+
+      expect(mockedPool.execute).toHaveBeenCalledWith(
+        'DELETE FROM TEAMS WHERE id = ?',
+        [1]
+      );
+    });
+  });
+
+  describe('addMember', () => {
+    it('should add a member to a team', async () => {
+      const mockMember = {
+        id: 1,
+        team_id: 1,
+        user_id: 2,
+        role: 'player',
+        created_at: new Date(),
+        updated_at: new Date()
+      };
+
+      mockedPool.execute.mockResolvedValue([[mockMember]] as any);
+
+      const result = await TeamModel.addMember(1, 2, 'player');
+
+      expect(mockedPool.execute).toHaveBeenCalledWith(
+        'INSERT INTO TEAM_MEMBERS (team_id, user_id, role) VALUES (?, ?, ?)',
+        [1, 2, 'player']
+      );
+      expect(result).toEqual(mockMember);
+    });
+  });
+
+  describe('removeMember', () => {
+    it('should remove a member from a team', async () => {
+      const mockResult = [{ affectedRows: 1 }];
+
+      mockedPool.execute.mockResolvedValue(mockResult as any);
+
+      await TeamModel.removeMember(1, 2);
+
+      expect(mockedPool.execute).toHaveBeenCalledWith(
+        'DELETE FROM TEAM_MEMBERS WHERE team_id = ? AND user_id = ?',
+        [1, 2]
+      );
+    });
+  });
+
+  describe('getTeamMembers', () => {
+    it('should get team members with user information', async () => {
+      const mockMembers = [
+        {
           id: 1,
           team_id: 1,
-          user_id: 2,
-          role: 'player',
-          created_at: '2023-10-01T14:00:00Z',
-          updated_at: '2023-10-01T14:00:00Z'
-        });
-      });
+          user_id: 1,
+          role: 'admin',
+          created_at: new Date(),
+          updated_at: new Date(),
+          username: 'testuser',
+          email: 'test@example.com',
+          profile_picture_url: null
+        }
+      ];
+
+      const mockResult = [mockMembers];
+
+      mockedPool.execute.mockResolvedValue(mockResult as any);
+
+      const result = await TeamModel.getTeamMembers(1);
+
+      expect(mockedPool.execute).toHaveBeenCalledWith(
+        expect.stringContaining('SELECT tm.id, tm.team_id, tm.user_id, tm.role, tm.created_at, tm.updated_at'),
+        [1]
+      );
+      expect(mockedPool.execute).toHaveBeenCalledWith(
+        expect.stringContaining('u.username, u.email, u.profile_picture_url'),
+        [1]
+      );
+      expect(mockedPool.execute).toHaveBeenCalledWith(
+        expect.stringContaining('FROM TEAM_MEMBERS tm'),
+        [1]
+      );
+      expect(mockedPool.execute).toHaveBeenCalledWith(
+        expect.stringContaining('JOIN USERS u ON tm.user_id = u.id'),
+        [1]
+      );
+      expect(mockedPool.execute).toHaveBeenCalledWith(
+        expect.stringContaining('WHERE tm.team_id = ?'),
+        [1]
+      );
+      expect(result).toEqual(mockMembers);
+    });
+  });
+
+  describe('isTeamAdmin', () => {
+    it('should return true if user is team admin', async () => {
+      const mockResult = [[{ '1': 1 }]];
+
+      mockedPool.execute.mockResolvedValue(mockResult as any);
+
+      const result = await TeamModel.isTeamAdmin(1, 1);
+
+      expect(mockedPool.execute).toHaveBeenCalledWith(
+        'SELECT 1 FROM TEAM_MEMBERS WHERE team_id = ? AND user_id = ? AND role = "admin"',
+        [1, 1]
+      );
+      expect(result).toBe(true);
     });
 
-    describe('removeMember', () => {
-      it('should remove a member from a team', async () => {
-        (pool.execute as jest.Mock).mockResolvedValueOnce([{ affectedRows: 1 }]);
-        const result = await TeamModel.removeMember(1, 2);
-        expect(result).toBeUndefined();
-      });
-      it('should return void if member not found', async () => {
-        (pool.execute as jest.Mock).mockResolvedValueOnce([{ affectedRows: 0 }]);
-        const result = await TeamModel.removeMember(1, 999);
-        expect(result).toBeUndefined();
-      });
+    it('should return false if user is not team admin', async () => {
+      const mockResult = [[]];
+
+      mockedPool.execute.mockResolvedValue(mockResult as any);
+
+      const result = await TeamModel.isTeamAdmin(1, 1);
+
+      expect(result).toBe(false);
+    });
+  });
+
+  describe('isTeamMember', () => {
+    it('should return true if user is team member', async () => {
+      const mockResult = [[{ '1': 1 }]];
+
+      mockedPool.execute.mockResolvedValue(mockResult as any);
+
+      const result = await TeamModel.isTeamMember(1, 1);
+
+      expect(mockedPool.execute).toHaveBeenCalledWith(
+        'SELECT 1 FROM TEAM_MEMBERS WHERE team_id = ? AND user_id = ?',
+        [1, 1]
+      );
+      expect(result).toBe(true);
     });
 
-    describe('getTeamMembers', () => {
-      it('should return all members of a team', async () => {
-        const mockMembers = [
-          { id: 1, team_id: 1, user_id: 2, role: 'player', created_at: '2023-10-01T14:00:00Z', updated_at: '2023-10-01T14:00:00Z' },
-          { id: 2, team_id: 1, user_id: 3, role: 'admin', created_at: '2023-10-01T14:00:00Z', updated_at: '2023-10-01T14:00:00Z' }
-        ];
-        (pool.execute as jest.Mock).mockResolvedValueOnce([mockMembers]);
-        const result = await TeamModel.getTeamMembers(1);
-        expect(result).toEqual([
-          { id: 1, team_id: 1, user_id: 2, role: 'player', created_at: '2023-10-01T14:00:00Z', updated_at: '2023-10-01T14:00:00Z' },
-          { id: 2, team_id: 1, user_id: 3, role: 'admin', created_at: '2023-10-01T14:00:00Z', updated_at: '2023-10-01T14:00:00Z' }
-        ]);
-      });
-    });
+    it('should return false if user is not team member', async () => {
+      const mockResult = [[]];
 
-    describe('isTeamMember', () => {
-      it('should return true if user is a team member', async () => {
-        (pool.execute as jest.Mock).mockResolvedValueOnce([[{ ID: 1 }]]);
-        const result = await TeamModel.isTeamMember(1, 2);
-        expect(result).toBe(true);
-      });
-      it('should return false if user is not a team member', async () => {
-        (pool.execute as jest.Mock).mockResolvedValueOnce([[]]);
-        const result = await TeamModel.isTeamMember(1, 999);
-        expect(result).toBe(false);
-      });
-    });
+      mockedPool.execute.mockResolvedValue(mockResult as any);
 
-    describe('isTeamAdmin', () => {
-      it('should return true if user is a team admin', async () => {
-        (pool.execute as jest.Mock).mockResolvedValueOnce([[{ ID: 1 }]]);
-        const result = await TeamModel.isTeamAdmin(1, 2);
-        expect(result).toBe(true);
-      });
-      it('should return false if user is not a team admin', async () => {
-        (pool.execute as jest.Mock).mockResolvedValueOnce([[]]);
-        const result = await TeamModel.isTeamAdmin(1, 999);
-        expect(result).toBe(false);
-      });
+      const result = await TeamModel.isTeamMember(1, 1);
+
+      expect(result).toBe(false);
+    });
+  });
+
+  describe('getTeamStats', () => {
+    it('should return team statistics', async () => {
+      const mockMemberRows = [
+        { role: 'admin', created_at: new Date() },
+        { role: 'player', created_at: new Date() },
+        { role: 'captain', created_at: new Date() }
+      ];
+
+      const mockTeamRows = [
+        { created_at: new Date(), updated_at: new Date() }
+      ];
+
+      mockedPool.execute
+        .mockResolvedValueOnce([mockMemberRows] as any)
+        .mockResolvedValueOnce([mockTeamRows] as any);
+
+      const result = await TeamModel.getTeamStats(1);
+
+      expect(mockedPool.execute).toHaveBeenCalledWith(
+        `SELECT role, created_at FROM TEAM_MEMBERS WHERE team_id = ?`,
+        [1]
+      );
+      expect(mockedPool.execute).toHaveBeenCalledWith(
+        `SELECT created_at, updated_at FROM TEAMS WHERE id = ?`,
+        [1]
+      );
+      expect(result).toHaveProperty('totalMembers');
+      expect(result).toHaveProperty('admins');
+      expect(result).toHaveProperty('captains');
+      expect(result).toHaveProperty('players');
+      expect(result).toHaveProperty('snackProviders');
+      expect(result).toHaveProperty('createdAt');
+      expect(result).toHaveProperty('lastActivity');
     });
   });
 }); 

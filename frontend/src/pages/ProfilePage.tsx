@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Container,
@@ -9,7 +9,6 @@ import {
   TextField,
   Button,
   Grid,
-  Avatar,
   Divider,
   Alert,
   CircularProgress,
@@ -31,13 +30,15 @@ import {
   Cake,
   LinkedIn,
   Twitter,
-  Language,
   Description,
+  CalendarToday,
 } from "@mui/icons-material";
 import { useAuth } from "../contexts/AuthContext";
+import { useI18n } from "../contexts/I18nContext";
 import api, { updateProfile } from "../services/api";
-import { ProfilePictureUpload } from "../components/ProfilePictureUpload";
+import ProfilePictureUpload from "../components/ProfilePictureUpload";
 import { AccountDeletion } from "../components/AccountDeletion";
+import NavigationHeader from "../components/NavigationHeader";
 
 interface ProfileFormData {
   username: string;
@@ -60,6 +61,7 @@ interface PasswordFormData {
 function ProfilePage() {
   const navigate = useNavigate();
   const { user, updateUser } = useAuth();
+  const { t } = useI18n();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -89,6 +91,9 @@ function ProfilePage() {
     new: false,
     confirm: false,
   });
+
+  // Ref for date of birth input
+  const dateOfBirthInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (user) {
@@ -148,9 +153,9 @@ function ProfilePage() {
       }
 
       setIsEditingProfile(false);
-      setSuccess("Profile updated successfully!");
+      setSuccess(t("profile.updateSuccess"));
     } catch (err: any) {
-      setError(err.response?.data?.message || "Failed to update profile");
+      setError(err.response?.data?.message || t("profile.updateError"));
     } finally {
       setLoading(false);
     }
@@ -158,12 +163,12 @@ function ProfilePage() {
 
   const handleChangePassword = async () => {
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      setError("New passwords do not match");
+      setError(t("profile.passwordMismatch"));
       return;
     }
 
     if (passwordForm.newPassword.length < 6) {
-      setError("New password must be at least 6 characters long");
+      setError(t("profile.passwordTooShort"));
       return;
     }
 
@@ -182,9 +187,9 @@ function ProfilePage() {
         newPassword: "",
         confirmPassword: "",
       });
-      setSuccess("Password changed successfully!");
+      setSuccess(t("profile.passwordChangeSuccess"));
     } catch (err: any) {
-      setError(err.response?.data?.message || "Failed to change password");
+      setError(err.response?.data?.message || t("profile.passwordChangeError"));
     } finally {
       setLoading(false);
     }
@@ -217,9 +222,16 @@ function ProfilePage() {
 
   const handlePictureUpdate = (pictureUrl: string | null) => {
     if (updateUser && user) {
+      // Construct full URL if pictureUrl is a relative path
+      const fullPictureUrl = pictureUrl
+        ? pictureUrl.startsWith("http")
+          ? pictureUrl
+          : `http://localhost:3002${pictureUrl}`
+        : null;
+
       updateUser({
         ...user,
-        profile_picture_url: pictureUrl,
+        profile_picture_url: fullPictureUrl,
       });
     }
   };
@@ -241,405 +253,620 @@ function ProfilePage() {
 
   return (
     <Container maxWidth="lg">
-      <Box sx={{ mt: 4, mb: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom>
-          Profile Settings
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          Manage your account information and security settings
-        </Typography>
-      </Box>
+      <NavigationHeader
+        title={t("profile.title")}
+        subtitle={t("profile.subtitle")}
+      />
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {error}
-        </Alert>
-      )}
+      {/* Skip to main content link for screen readers */}
+      <a
+        href="#profile-content"
+        style={{
+          position: "absolute",
+          left: "-10000px",
+          top: "auto",
+          width: "1px",
+          height: "1px",
+          overflow: "hidden",
+        }}
+        onFocus={(e) => {
+          e.target.style.left = "6px";
+          e.target.style.top = "6px";
+          e.target.style.width = "auto";
+          e.target.style.height = "auto";
+          e.target.style.overflow = "visible";
+        }}
+        onBlur={(e) => {
+          e.target.style.left = "-10000px";
+          e.target.style.top = "auto";
+          e.target.style.width = "1px";
+          e.target.style.height = "1px";
+          e.target.style.overflow = "hidden";
+        }}
+      >
+        Skip to main content
+      </a>
 
-      {success && (
-        <Alert severity="success" sx={{ mb: 3 }}>
-          {success}
-        </Alert>
-      )}
+      <Box id="profile-content" role="main" aria-labelledby="profile-title">
+        {error && (
+          <Alert
+            severity="error"
+            sx={{ mb: 3 }}
+            role="alert"
+            aria-live="assertive"
+          >
+            {error}
+          </Alert>
+        )}
 
-      <Grid container spacing={3}>
-        {/* Profile Information */}
-        <Grid item xs={12} md={8}>
-          <Card>
-            <CardContent>
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  mb: 3,
-                }}
-              >
-                <Typography variant="h6">Profile Information</Typography>
-                {!isEditingProfile ? (
-                  <Button
-                    startIcon={<Edit />}
-                    onClick={() => setIsEditingProfile(true)}
-                    variant="outlined"
-                    size="small"
-                  >
-                    Edit
-                  </Button>
-                ) : (
-                  <Box>
+        {success && (
+          <Alert
+            severity="success"
+            sx={{ mb: 3 }}
+            role="status"
+            aria-live="polite"
+          >
+            {success}
+          </Alert>
+        )}
+
+        <Grid container spacing={3}>
+          {/* Profile Information */}
+          <Grid item xs={12} md={8}>
+            <Card role="region" aria-labelledby="profile-information-title">
+              <CardContent>
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    mb: 3,
+                  }}
+                >
+                  <Typography variant="h6" id="profile-information-title">
+                    {t("profile.information")}
+                  </Typography>
+                  {!isEditingProfile ? (
                     <Button
-                      startIcon={<Save />}
-                      onClick={handleSaveProfile}
-                      variant="contained"
-                      size="small"
-                      disabled={loading}
-                      sx={{ mr: 1 }}
-                    >
-                      Save
-                    </Button>
-                    <Button
-                      startIcon={<Cancel />}
-                      onClick={handleCancelEdit}
+                      startIcon={<Edit aria-hidden="true" />}
+                      onClick={() => setIsEditingProfile(true)}
                       variant="outlined"
                       size="small"
-                      disabled={loading}
+                      aria-label={`${t("profile.edit")} profile information`}
+                      sx={{
+                        minHeight: "44px",
+                        "&:focus": {
+                          outline: "2px solid",
+                          outlineColor: "primary.main",
+                          outlineOffset: "2px",
+                        },
+                      }}
                     >
-                      Cancel
+                      {t("profile.edit")}
                     </Button>
-                  </Box>
-                )}
-              </Box>
+                  ) : (
+                    <Box role="group" aria-label="Profile edit actions">
+                      <Button
+                        startIcon={<Save aria-hidden="true" />}
+                        onClick={handleSaveProfile}
+                        variant="contained"
+                        size="small"
+                        disabled={loading}
+                        aria-label={`${t("profile.save")} profile changes`}
+                        sx={{
+                          mr: 1,
+                          minHeight: "44px",
+                          "&:focus": {
+                            outline: "2px solid",
+                            outlineColor: "primary.main",
+                            outlineOffset: "2px",
+                          },
+                        }}
+                      >
+                        {t("profile.save")}
+                      </Button>
+                      <Button
+                        startIcon={<Cancel aria-hidden="true" />}
+                        onClick={handleCancelEdit}
+                        variant="outlined"
+                        size="small"
+                        disabled={loading}
+                        aria-label={`${t("profile.cancel")} profile editing`}
+                        sx={{
+                          minHeight: "44px",
+                          "&:focus": {
+                            outline: "2px solid",
+                            outlineColor: "primary.main",
+                            outlineOffset: "2px",
+                          },
+                        }}
+                      >
+                        {t("profile.cancel")}
+                      </Button>
+                    </Box>
+                  )}
+                </Box>
 
-              {/* Profile Picture */}
-              <Box sx={{ mb: 3, display: "flex", justifyContent: "center" }}>
-                <ProfilePictureUpload
-                  currentPictureUrl={user.profile_picture_url}
-                  onPictureUpdate={handlePictureUpdate}
-                  size={120}
+                {/* Profile Picture */}
+                <Box sx={{ mb: 3, display: "flex", justifyContent: "center" }}>
+                  <ProfilePictureUpload
+                    currentImageUrl={user.profile_picture_url}
+                    onImageUpdate={handlePictureUpdate}
+                    size={120}
+                  />
+                </Box>
+
+                <Grid container spacing={2}>
+                  {/* Basic Information */}
+                  <Grid item xs={12} md={6}>
+                    <TextField
+                      fullWidth
+                      label={t("profile.username")}
+                      value={profileForm.username}
+                      onChange={handleProfileChange("username")}
+                      disabled={!isEditingProfile}
+                      margin="normal"
+                      aria-required="true"
+                      aria-describedby="username-help"
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <Person aria-hidden="true" />
+                          </InputAdornment>
+                        ),
+                      }}
+                      sx={{
+                        "&:focus-within": {
+                          outline: "2px solid",
+                          outlineColor: "primary.main",
+                          outlineOffset: "2px",
+                        },
+                      }}
+                    />
+                  </Grid>
+
+                  <Grid item xs={12} md={6}>
+                    <TextField
+                      fullWidth
+                      label={t("profile.email")}
+                      type="email"
+                      value={profileForm.email}
+                      onChange={handleProfileChange("email")}
+                      disabled={!isEditingProfile}
+                      margin="normal"
+                      aria-required="true"
+                      aria-describedby="email-help"
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <Email aria-hidden="true" />
+                          </InputAdornment>
+                        ),
+                      }}
+                      sx={{
+                        "&:focus-within": {
+                          outline: "2px solid",
+                          outlineColor: "primary.main",
+                          outlineOffset: "2px",
+                        },
+                      }}
+                    />
+                  </Grid>
+
+                  <Grid item xs={12} md={6}>
+                    <TextField
+                      fullWidth
+                      label={t("profile.location")}
+                      value={profileForm.location}
+                      onChange={handleProfileChange("location")}
+                      disabled={!isEditingProfile}
+                      margin="normal"
+                      aria-describedby="location-help"
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <LocationOn aria-hidden="true" />
+                          </InputAdornment>
+                        ),
+                      }}
+                      sx={{
+                        "&:focus-within": {
+                          outline: "2px solid",
+                          outlineColor: "primary.main",
+                          outlineOffset: "2px",
+                        },
+                      }}
+                    />
+                  </Grid>
+
+                  <Grid item xs={12} md={6}>
+                    <TextField
+                      fullWidth
+                      label={t("profile.phone")}
+                      value={profileForm.phone}
+                      onChange={handleProfileChange("phone")}
+                      disabled={!isEditingProfile}
+                      margin="normal"
+                      aria-describedby="phone-help"
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <Phone aria-hidden="true" />
+                          </InputAdornment>
+                        ),
+                      }}
+                      sx={{
+                        "&:focus-within": {
+                          outline: "2px solid",
+                          outlineColor: "primary.main",
+                          outlineOffset: "2px",
+                        },
+                      }}
+                    />
+                  </Grid>
+
+                  <Grid item xs={12} md={6}>
+                    <TextField
+                      fullWidth
+                      label={t("profile.dateOfBirth")}
+                      type="date"
+                      value={profileForm.date_of_birth}
+                      onChange={handleProfileChange("date_of_birth")}
+                      disabled={!isEditingProfile}
+                      margin="normal"
+                      inputRef={dateOfBirthInputRef}
+                      InputLabelProps={{
+                        shrink: true,
+                      }}
+                      aria-describedby="date-of-birth-help"
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <Cake aria-hidden="true" />
+                          </InputAdornment>
+                        ),
+                      }}
+                      sx={{
+                        "&:focus-within": {
+                          outline: "2px solid",
+                          outlineColor: "primary.main",
+                          outlineOffset: "2px",
+                        },
+                      }}
+                    />
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label={t("profile.bio")}
+                      value={profileForm.bio}
+                      onChange={handleProfileChange("bio")}
+                      disabled={!isEditingProfile}
+                      margin="normal"
+                      multiline
+                      rows={3}
+                      aria-describedby="bio-help"
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <Description aria-hidden="true" />
+                          </InputAdornment>
+                        ),
+                      }}
+                      sx={{
+                        "&:focus-within": {
+                          outline: "2px solid",
+                          outlineColor: "primary.main",
+                          outlineOffset: "2px",
+                        },
+                      }}
+                    />
+                  </Grid>
+
+                  {/* Social Links */}
+                  <Grid item xs={12}>
+                    <Typography variant="h6" sx={{ mb: 2 }}>
+                      {t("profile.socialLinks")}
+                    </Typography>
+                  </Grid>
+
+                  <Grid item xs={12} md={4}>
+                    <TextField
+                      fullWidth
+                      label={t("profile.linkedin")}
+                      value={profileForm.linkedin_url}
+                      onChange={handleProfileChange("linkedin_url")}
+                      disabled={!isEditingProfile}
+                      margin="normal"
+                      aria-describedby="linkedin-help"
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <LinkedIn aria-hidden="true" />
+                          </InputAdornment>
+                        ),
+                      }}
+                      sx={{
+                        "&:focus-within": {
+                          outline: "2px solid",
+                          outlineColor: "primary.main",
+                          outlineOffset: "2px",
+                        },
+                      }}
+                    />
+                  </Grid>
+
+                  <Grid item xs={12} md={4}>
+                    <TextField
+                      fullWidth
+                      label={t("profile.twitter")}
+                      value={profileForm.twitter_url}
+                      onChange={handleProfileChange("twitter_url")}
+                      disabled={!isEditingProfile}
+                      margin="normal"
+                      aria-describedby="twitter-help"
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <Twitter aria-hidden="true" />
+                          </InputAdornment>
+                        ),
+                      }}
+                      sx={{
+                        "&:focus-within": {
+                          outline: "2px solid",
+                          outlineColor: "primary.main",
+                          outlineOffset: "2px",
+                        },
+                      }}
+                    />
+                  </Grid>
+
+                  <Grid item xs={12} md={4}>
+                    <TextField
+                      fullWidth
+                      label={t("profile.website")}
+                      value={profileForm.website_url}
+                      onChange={handleProfileChange("website_url")}
+                      disabled={!isEditingProfile}
+                      margin="normal"
+                      aria-describedby="website-help"
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <CalendarToday aria-hidden="true" />
+                          </InputAdornment>
+                        ),
+                      }}
+                      sx={{
+                        "&:focus-within": {
+                          outline: "2px solid",
+                          outlineColor: "primary.main",
+                          outlineOffset: "2px",
+                        },
+                      }}
+                    />
+                  </Grid>
+                </Grid>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          {/* Password Change */}
+          <Grid item xs={12} md={4}>
+            <Card role="region" aria-labelledby="password-change-title">
+              <CardContent>
+                <Typography
+                  variant="h6"
+                  id="password-change-title"
+                  gutterBottom
+                >
+                  {t("profile.changePassword")}
+                </Typography>
+                <Divider sx={{ mb: 2 }} />
+
+                <TextField
+                  fullWidth
+                  label={t("profile.currentPassword")}
+                  type={showPasswords.current ? "text" : "password"}
+                  value={passwordForm.currentPassword}
+                  onChange={handlePasswordChange("currentPassword")}
+                  margin="normal"
+                  aria-required="true"
+                  aria-describedby="current-password-help"
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Lock aria-hidden="true" />
+                      </InputAdornment>
+                    ),
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={() => togglePasswordVisibility("current")}
+                          edge="end"
+                          aria-label={
+                            showPasswords.current
+                              ? t("profile.hidePassword")
+                              : t("profile.showPassword")
+                          }
+                          sx={{
+                            minWidth: "44px",
+                            minHeight: "44px",
+                            "&:focus": {
+                              outline: "2px solid",
+                              outlineColor: "primary.main",
+                              outlineOffset: "2px",
+                            },
+                          }}
+                        >
+                          {showPasswords.current ? (
+                            <VisibilityOff aria-hidden="true" />
+                          ) : (
+                            <Visibility aria-hidden="true" />
+                          )}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{
+                    "&:focus-within": {
+                      outline: "2px solid",
+                      outlineColor: "primary.main",
+                      outlineOffset: "2px",
+                    },
+                  }}
                 />
-              </Box>
 
-              <Grid container spacing={2}>
-                {/* Basic Information */}
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    fullWidth
-                    label="Username"
-                    value={profileForm.username}
-                    onChange={handleProfileChange("username")}
-                    disabled={!isEditingProfile}
-                    margin="normal"
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <Person />
-                        </InputAdornment>
-                      ),
-                    }}
-                  />
-                </Grid>
+                <TextField
+                  fullWidth
+                  label={t("profile.newPassword")}
+                  type={showPasswords.new ? "text" : "password"}
+                  value={passwordForm.newPassword}
+                  onChange={handlePasswordChange("newPassword")}
+                  margin="normal"
+                  aria-required="true"
+                  aria-describedby="new-password-help"
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Lock aria-hidden="true" />
+                      </InputAdornment>
+                    ),
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={() => togglePasswordVisibility("new")}
+                          edge="end"
+                          aria-label={
+                            showPasswords.new
+                              ? t("profile.hidePassword")
+                              : t("profile.showPassword")
+                          }
+                          sx={{
+                            minWidth: "44px",
+                            minHeight: "44px",
+                            "&:focus": {
+                              outline: "2px solid",
+                              outlineColor: "primary.main",
+                              outlineOffset: "2px",
+                            },
+                          }}
+                        >
+                          {showPasswords.new ? (
+                            <VisibilityOff aria-hidden="true" />
+                          ) : (
+                            <Visibility aria-hidden="true" />
+                          )}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{
+                    "&:focus-within": {
+                      outline: "2px solid",
+                      outlineColor: "primary.main",
+                      outlineOffset: "2px",
+                    },
+                  }}
+                />
 
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    fullWidth
-                    label="Email"
-                    type="email"
-                    value={profileForm.email}
-                    onChange={handleProfileChange("email")}
-                    disabled={!isEditingProfile}
-                    margin="normal"
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <Email />
-                        </InputAdornment>
-                      ),
-                    }}
-                  />
-                </Grid>
+                <TextField
+                  fullWidth
+                  label={t("profile.confirmPassword")}
+                  type={showPasswords.confirm ? "text" : "password"}
+                  value={passwordForm.confirmPassword}
+                  onChange={handlePasswordChange("confirmPassword")}
+                  margin="normal"
+                  aria-required="true"
+                  aria-describedby="confirm-password-help"
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Lock aria-hidden="true" />
+                      </InputAdornment>
+                    ),
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={() => togglePasswordVisibility("confirm")}
+                          edge="end"
+                          aria-label={
+                            showPasswords.confirm
+                              ? t("profile.hidePassword")
+                              : t("profile.showPassword")
+                          }
+                          sx={{
+                            minWidth: "44px",
+                            minHeight: "44px",
+                            "&:focus": {
+                              outline: "2px solid",
+                              outlineColor: "primary.main",
+                              outlineOffset: "2px",
+                            },
+                          }}
+                        >
+                          {showPasswords.confirm ? (
+                            <VisibilityOff aria-hidden="true" />
+                          ) : (
+                            <Visibility aria-hidden="true" />
+                          )}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{
+                    "&:focus-within": {
+                      outline: "2px solid",
+                      outlineColor: "primary.main",
+                      outlineOffset: "2px",
+                    },
+                  }}
+                />
 
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    fullWidth
-                    label="Location"
-                    value={profileForm.location}
-                    onChange={handleProfileChange("location")}
-                    disabled={!isEditingProfile}
-                    margin="normal"
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <LocationOn />
-                        </InputAdornment>
-                      ),
-                    }}
-                  />
-                </Grid>
+                <Button
+                  fullWidth
+                  variant="contained"
+                  onClick={handleChangePassword}
+                  disabled={loading}
+                  aria-label={t("profile.changePassword")}
+                  sx={{
+                    mt: 2,
+                    minHeight: "48px",
+                    "&:focus": {
+                      outline: "2px solid",
+                      outlineColor: "primary.main",
+                      outlineOffset: "2px",
+                    },
+                  }}
+                >
+                  {t("profile.changePassword")}
+                </Button>
+              </CardContent>
+            </Card>
 
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    fullWidth
-                    label="Phone"
-                    value={profileForm.phone}
-                    onChange={handleProfileChange("phone")}
-                    disabled={!isEditingProfile}
-                    margin="normal"
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <Phone />
-                        </InputAdornment>
-                      ),
-                    }}
-                  />
-                </Grid>
-
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    fullWidth
-                    label="Date of Birth"
-                    type="date"
-                    value={
-                      profileForm.date_of_birth
-                        ? profileForm.date_of_birth.split("T")[0]
-                        : ""
-                    }
-                    onChange={handleProfileChange("date_of_birth")}
-                    disabled={!isEditingProfile}
-                    margin="normal"
-                    InputLabelProps={{
-                      shrink: true,
-                    }}
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <Cake />
-                        </InputAdornment>
-                      ),
-                    }}
-                  />
-                </Grid>
-
-                {/* Social Media Links */}
-                <Grid item xs={12}>
-                  <Typography variant="h6" sx={{ mt: 2, mb: 1 }}>
-                    Social Media Links
-                  </Typography>
-                </Grid>
-
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    fullWidth
-                    label="LinkedIn URL"
-                    value={profileForm.linkedin_url}
-                    onChange={handleProfileChange("linkedin_url")}
-                    disabled={!isEditingProfile}
-                    margin="normal"
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <LinkedIn />
-                        </InputAdornment>
-                      ),
-                    }}
-                  />
-                </Grid>
-
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    fullWidth
-                    label="Twitter URL"
-                    value={profileForm.twitter_url}
-                    onChange={handleProfileChange("twitter_url")}
-                    disabled={!isEditingProfile}
-                    margin="normal"
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <Twitter />
-                        </InputAdornment>
-                      ),
-                    }}
-                  />
-                </Grid>
-
-                <Grid item xs={12}>
-                  <TextField
-                    fullWidth
-                    label="Website URL"
-                    value={profileForm.website_url}
-                    onChange={handleProfileChange("website_url")}
-                    disabled={!isEditingProfile}
-                    margin="normal"
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <Language />
-                        </InputAdornment>
-                      ),
-                    }}
-                  />
-                </Grid>
-
-                {/* Bio */}
-                <Grid item xs={12}>
-                  <TextField
-                    fullWidth
-                    label="Bio"
-                    value={profileForm.bio}
-                    onChange={handleProfileChange("bio")}
-                    disabled={!isEditingProfile}
-                    margin="normal"
-                    multiline
-                    rows={4}
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <Description />
-                        </InputAdornment>
-                      ),
-                    }}
-                  />
-                </Grid>
-              </Grid>
-
-              <Box sx={{ mt: 2 }}>
-                <Typography variant="body2" color="text.secondary">
-                  Account Status:{" "}
-                  <Chip
-                    label={user.is_verified ? "Verified" : "Unverified"}
-                    color={user.is_verified ? "success" : "warning"}
-                    size="small"
-                  />
+            {/* Account Deletion */}
+            <Card
+              sx={{ mt: 2 }}
+              role="region"
+              aria-labelledby="account-deletion-title"
+            >
+              <CardContent>
+                <Typography
+                  variant="h6"
+                  id="account-deletion-title"
+                  gutterBottom
+                >
+                  {t("profile.dangerZone")}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Member since: {new Date(user.created_at).toLocaleDateString()}
-                </Typography>
-              </Box>
-            </CardContent>
-          </Card>
+                <Divider sx={{ mb: 2 }} />
+                <AccountDeletion />
+              </CardContent>
+            </Card>
+          </Grid>
         </Grid>
-
-        {/* Change Password */}
-        <Grid item xs={12} md={4}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Change Password
-              </Typography>
-
-              <TextField
-                fullWidth
-                label="Current Password"
-                type={showPasswords.current ? "text" : "password"}
-                value={passwordForm.currentPassword}
-                onChange={handlePasswordChange("currentPassword")}
-                margin="normal"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Lock />
-                    </InputAdornment>
-                  ),
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        onClick={() => togglePasswordVisibility("current")}
-                        edge="end"
-                      >
-                        {showPasswords.current ? (
-                          <VisibilityOff />
-                        ) : (
-                          <Visibility />
-                        )}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
-              />
-
-              <TextField
-                fullWidth
-                label="New Password"
-                type={showPasswords.new ? "text" : "password"}
-                value={passwordForm.newPassword}
-                onChange={handlePasswordChange("newPassword")}
-                margin="normal"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Lock />
-                    </InputAdornment>
-                  ),
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        onClick={() => togglePasswordVisibility("new")}
-                        edge="end"
-                      >
-                        {showPasswords.new ? <VisibilityOff /> : <Visibility />}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
-              />
-
-              <TextField
-                fullWidth
-                label="Confirm New Password"
-                type={showPasswords.confirm ? "text" : "password"}
-                value={passwordForm.confirmPassword}
-                onChange={handlePasswordChange("confirmPassword")}
-                margin="normal"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Lock />
-                    </InputAdornment>
-                  ),
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        onClick={() => togglePasswordVisibility("confirm")}
-                        edge="end"
-                      >
-                        {showPasswords.confirm ? (
-                          <VisibilityOff />
-                        ) : (
-                          <Visibility />
-                        )}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
-              />
-
-              <Button
-                fullWidth
-                variant="contained"
-                onClick={handleChangePassword}
-                disabled={
-                  loading ||
-                  !passwordForm.currentPassword ||
-                  !passwordForm.newPassword ||
-                  !passwordForm.confirmPassword
-                }
-                sx={{ mt: 2 }}
-              >
-                {loading ? <CircularProgress size={24} /> : "Change Password"}
-              </Button>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-
-      <Box sx={{ mt: 4, display: "flex", justifyContent: "center" }}>
-        <Button variant="outlined" onClick={() => navigate("/")}>
-          Back to Dashboard
-        </Button>
       </Box>
-
-      <AccountDeletion />
     </Container>
   );
 }

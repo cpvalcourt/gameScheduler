@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import type { ChangeEvent } from "react";
 import type { SelectChangeEvent } from "@mui/material";
 import { useParams, useNavigate } from "react-router-dom";
@@ -31,6 +31,8 @@ import {
   Delete as DeleteIcon,
   Add as AddIcon,
   ArrowBack as ArrowBackIcon,
+  CalendarToday as CalendarTodayIcon,
+  Schedule as ScheduleIcon,
 } from "@mui/icons-material";
 import api from "../api/axios";
 import GameManagement from "../components/GameManagement";
@@ -66,14 +68,19 @@ const GamesPage = () => {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
-    sport_type: "" as SportType,
+    sport_type: "Basketball" as SportType,
     date: "",
-    time: "",
+    time: "14:00",
     location: "",
-    min_players: 0,
-    max_players: 0,
-    status: "scheduled" as const,
+    min_players: 8,
+    max_players: 20,
+    status: "scheduled" as Game["status"],
+    series_id: "",
   });
+
+  // Refs for input fields
+  const dateInputRef = useRef<HTMLInputElement>(null);
+  const timeInputRef = useRef<HTMLInputElement>(null);
 
   const fetchSeries = async () => {
     try {
@@ -114,6 +121,7 @@ const GamesPage = () => {
         min_players: game.min_players,
         max_players: game.max_players,
         status: game.status,
+        series_id: game.series_id.toString(),
       });
     } else {
       setEditingGame(null);
@@ -122,11 +130,12 @@ const GamesPage = () => {
         description: "",
         sport_type: "Basketball",
         date: "",
-        time: "",
+        time: "14:00",
         location: "",
-        min_players: 0,
-        max_players: 0,
+        min_players: 8,
+        max_players: 20,
         status: "scheduled",
+        series_id: "",
       });
     }
     setOpenDialog(true);
@@ -324,7 +333,37 @@ const GamesPage = () => {
             fullWidth
             value={formData.date}
             onChange={handleInputChange}
+            inputRef={dateInputRef}
             InputLabelProps={{ shrink: true }}
+            InputProps={{
+              endAdornment: (
+                <Box
+                  onClick={() => {
+                    if (dateInputRef.current) {
+                      dateInputRef.current.showPicker();
+                    }
+                  }}
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                    padding: "4px",
+                    borderRadius: "4px",
+                    "&:hover": {
+                      backgroundColor: "rgba(25, 118, 210, 0.08)",
+                    },
+                  }}
+                >
+                  <CalendarTodayIcon
+                    sx={{
+                      color: "#1976d2",
+                      fontSize: "20px",
+                    }}
+                  />
+                </Box>
+              ),
+            }}
             required
           />
           <TextField
@@ -335,7 +374,37 @@ const GamesPage = () => {
             fullWidth
             value={formData.time}
             onChange={handleInputChange}
+            inputRef={timeInputRef}
             InputLabelProps={{ shrink: true }}
+            InputProps={{
+              endAdornment: (
+                <Box
+                  onClick={() => {
+                    if (timeInputRef.current) {
+                      timeInputRef.current.showPicker();
+                    }
+                  }}
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                    padding: "4px",
+                    borderRadius: "4px",
+                    "&:hover": {
+                      backgroundColor: "rgba(25, 118, 210, 0.08)",
+                    },
+                  }}
+                >
+                  <ScheduleIcon
+                    sx={{
+                      color: "#1976d2",
+                      fontSize: "20px",
+                    }}
+                  />
+                </Box>
+              ),
+            }}
             required
           />
           <TextField
