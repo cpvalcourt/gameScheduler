@@ -25,6 +25,7 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  CircularProgress,
 } from "@mui/material";
 import {
   Edit as EditIcon,
@@ -39,6 +40,8 @@ import GameManagement from "../components/GameManagement";
 import type { GameSeries } from "../types/gameSeries";
 import { SPORT_TYPES } from "../constants/sport-types";
 import type { SportType } from "../constants/sport-types";
+import { useI18n } from "../contexts/I18nContext";
+import { formatDate } from "../utils/dateUtils";
 
 interface Game {
   id: number;
@@ -81,6 +84,8 @@ const GamesPage = () => {
   // Refs for input fields
   const dateInputRef = useRef<HTMLInputElement>(null);
   const timeInputRef = useRef<HTMLInputElement>(null);
+
+  const { t, language } = useI18n();
 
   const fetchSeries = async () => {
     try {
@@ -262,9 +267,7 @@ const GamesPage = () => {
                 <TableCell>{game.name}</TableCell>
                 <TableCell>{game.sport_type}</TableCell>
                 <TableCell>{game.description}</TableCell>
-                <TableCell>
-                  {new Date(game.date).toLocaleDateString()}
-                </TableCell>
+                <TableCell>{formatDate(game.date, language)}</TableCell>
                 <TableCell>{game.time}</TableCell>
                 <TableCell>{game.location}</TableCell>
                 <TableCell>{game.min_players}</TableCell>

@@ -198,5 +198,26 @@ class TeamController {
             res.status(500).json({ message: 'Error getting user teams' });
         }
     }
+    static async getTeamStats(req, res) {
+        try {
+            const { id } = req.params;
+            const teamId = parseInt(id);
+            const user = req.user;
+            if (!user?.id) {
+                return res.status(401).json({ message: 'User not authenticated' });
+            }
+            // Check if user is a member of the team
+            const isMember = await team_model_1.TeamModel.isTeamMember(teamId, user.id);
+            if (!isMember) {
+                return res.status(403).json({ message: 'Not authorized to view this team' });
+            }
+            const stats = await team_model_1.TeamModel.getTeamStats(teamId);
+            res.json(stats);
+        }
+        catch (error) {
+            console.error('Error getting team stats:', error);
+            res.status(500).json({ message: 'Error getting team statistics' });
+        }
+    }
 }
 exports.TeamController = TeamController;

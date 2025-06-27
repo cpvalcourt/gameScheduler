@@ -4,6 +4,7 @@ import { TeamInvitationModel } from '../models/team-invitation.model';
 import { TeamModel } from '../models/team.model';
 import { UserModel } from '../models/user.model';
 import { AppError } from '../utils/app-error';
+import { TeamInvitationService } from '../services/team-invitation.service';
 
 export class TeamInvitationController {
     static async sendInvitation(req: Request, res: Response) {
@@ -30,9 +31,12 @@ export class TeamInvitationController {
             }
 
             // Check if user is already a member of the team
-            const isMember = await TeamModel.isTeamMember(teamId, userId);
-            if (isMember) {
-                return res.status(400).json({ message: 'User is already a member of this team' });
+            const invitedUser = await UserModel.findByEmail(email);
+            if (invitedUser) {
+                const isMember = await TeamModel.isTeamMember(teamId, invitedUser.id);
+                if (isMember) {
+                    return res.status(400).json({ message: 'User is already a member of this team' });
+                }
             }
 
             // Check if invitation already exists
@@ -257,6 +261,158 @@ export class TeamInvitationController {
             console.error('Error deleting invitation:', error);
             res.status(500).json({ 
                 message: 'Error deleting invitation',
+                error: error instanceof Error ? error.message : 'Unknown error'
+            });
+        }
+    }
+
+    static async getInvitationByToken(req: Request, res: Response) {
+        try {
+            const { token } = req.params;
+
+            const invitation = await TeamInvitationModel.findByToken(token);
+            if (!invitation) {
+                return res.status(404).json({ message: 'Invitation not found' });
+            }
+
+            if (invitation.status !== 'pending') {
+                return res.status(400).json({ message: 'Invitation is no longer valid' });
+            }
+
+            if (invitation.expires_at < new Date()) {
+                await TeamInvitationModel.updateStatus(token, 'expired');
+                return res.status(400).json({ message: 'Invitation has expired' });
+            }
+
+            res.json({
+                invitation: {
+                    id: invitation.id,
+                    team_id: invitation.team_id,
+                    team_name: invitation.team_name,
+                    invited_email: invitation.invited_email,
+                    invited_role: invitation.invited_role,
+                    status: invitation.status,
+                    expires_at: invitation.expires_at,
+                    created_at: invitation.created_at,
+                    invited_by_username: invitation.invited_by_username
+                }
+            });
+        } catch (error) {
+            console.error('Error getting invitation by token:', error);
+            res.status(500).json({ 
+                message: 'Error getting invitation',
+                error: error instanceof Error ? error.message : 'Unknown error'
+            });
+        }
+    }
+
+    static async acceptInvitationWithService(req: Request, res: Response) {
+        try {
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                return res.status(400).json({ 
+                    message: 'Validation failed', 
+                    errors: errors.array() 
+                });
+            }
+
+            const { token } = req.params;
+            const userId = (req as any).user.id;
+
+            const result = await TeamInvitationService.acceptInvitation(token, userId);
+
+            if (!result.success) {
+                const statusCode = result.message.includes('not found') ? 404 : 
+                                 result.message.includes('not authorized') ? 403 : 
+                                 result.message.includes('expired') ? 400 : 400;
+                return res.status(statusCode).json({ 
+                    message: result.message 
+                });
+            }
+
+            res.json({
+                message: result.message,
+                data: {
+                    invitation: result.invitation,
+                    team: result.team,
+                    user: result.user
+                }
+            });
+
+        } catch (error) {
+            console.error('Error accepting invitation with service:', error);
+            res.status(500).json({ 
+                message: 'Error accepting invitation',
+                error: error instanceof Error ? error.message : 'Unknown error'
+            });
+        }
+    }
+
+    static async declineInvitationWithService(req: Request, res: Response) {
+        try {
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                return res.status(400).json({ 
+                    message: 'Validation failed', 
+                    errors: errors.array() 
+                });
+            }
+
+            const { token } = req.params;
+            const userId = (req as any).user.id;
+
+            const result = await TeamInvitationService.declineInvitation(token, userId);
+
+            if (!result.success) {
+                const statusCode = result.message.includes('not found') ? 404 : 
+                                 result.message.includes('not authorized') ? 403 : 
+                                 result.message.includes('expired') ? 400 : 400;
+                return res.status(statusCode).json({ 
+                    message: result.message 
+                });
+            }
+
+            res.json({
+                message: result.message,
+                data: {
+                    invitation: result.invitation
+                }
+            });
+
+        } catch (error) {
+            console.error('Error declining invitation with service:', error);
+            res.status(500).json({ 
+                message: 'Error declining invitation',
+                error: error instanceof Error ? error.message : 'Unknown error'
+            });
+        }
+    }
+
+    static async getInvitationDetailsWithService(req: Request, res: Response) {
+        try {
+            const { token } = req.params;
+
+            const result = await TeamInvitationService.getInvitationByToken(token);
+
+            if (!result.success) {
+                const statusCode = result.message.includes('not found') ? 404 : 
+                                 result.message.includes('expired') ? 400 : 400;
+                return res.status(statusCode).json({ 
+                    message: result.message 
+                });
+            }
+
+            res.json({
+                message: result.message,
+                data: {
+                    invitation: result.invitation
+                }
+            });
+
+        } catch (error) {
+            console.error('Error getting invitation details with service:', error);
+            res.status(500).json({ 
+                message: 'Error getting invitation details',
                 error: error instanceof Error ? error.message : 'Unknown error'
             });
         }

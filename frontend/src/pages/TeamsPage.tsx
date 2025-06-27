@@ -48,10 +48,11 @@ import {
 import type { Team, TeamWithMembers, TeamFormData } from "../types/team";
 import { useNavigate } from "react-router-dom";
 import NavigationHeader from "../components/NavigationHeader";
+import { formatDate } from "../utils/dateUtils";
 
 const TeamsPage = () => {
   const { user } = useAuth();
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const navigate = useNavigate();
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
@@ -287,7 +288,7 @@ const TeamsPage = () => {
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
                     {t("teams.created")}:{" "}
-                    {new Date(team.created_at).toLocaleDateString()}
+                    {formatDate(team.created_at, language)}
                   </Typography>
                 </CardContent>
                 <CardActions sx={{ justifyContent: "space-between" }}>

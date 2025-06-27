@@ -31,6 +31,11 @@ import { useAuth } from "../contexts/AuthContext";
 import { useI18n } from "../contexts/I18nContext";
 import api from "../services/api";
 import NavigationHeader from "../components/NavigationHeader";
+import {
+  formatDateTime,
+  formatGameDate,
+  formatRelativeTime,
+} from "../utils/dateUtils";
 
 interface DashboardStats {
   totalGameSeries: number;
@@ -63,7 +68,7 @@ interface UpcomingGame {
 function DashboardPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [upcomingGames, setUpcomingGames] = useState<UpcomingGame[]>([]);
@@ -114,7 +119,7 @@ function DashboardPage() {
       {
         id: 1,
         type: "game_created",
-        title: t("dashboard.newGameCreated"),
+        title: "",
         description: "Basketball Tournament - Round 1 added to Summer League",
         timestamp: "2024-01-15T10:30:00Z",
         entityId: 1,
@@ -122,7 +127,7 @@ function DashboardPage() {
       {
         id: 2,
         type: "series_created",
-        title: t("dashboard.newSeriesCreated"),
+        title: "",
         description: "Summer League 2024 created",
         timestamp: "2024-01-14T15:45:00Z",
         entityId: 2,
@@ -130,7 +135,7 @@ function DashboardPage() {
       {
         id: 3,
         type: "team_joined",
-        title: t("dashboard.teamJoined"),
+        title: "",
         description: "Thunder Dragons joined Basketball Tournament",
         timestamp: "2024-01-13T09:20:00Z",
         entityId: 3,
@@ -168,6 +173,21 @@ function DashboardPage() {
     ]);
   };
 
+  const getActivityTitle = (type: string) => {
+    switch (type) {
+      case "game_created":
+        return t("dashboard.newGameCreated");
+      case "series_created":
+        return t("dashboard.newSeriesCreated");
+      case "team_joined":
+        return t("dashboard.teamJoined");
+      case "game_updated":
+        return t("dashboard.gameUpdated") || "Game Updated";
+      default:
+        return t("dashboard.activity") || "Activity";
+    }
+  };
+
   const getActivityIcon = (type: string) => {
     switch (type) {
       case "game_created":
@@ -183,66 +203,45 @@ function DashboardPage() {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
-  const formatGameDate = (date: string, time: string) => {
-    try {
-      // Debug logging to see what data we're receiving
-      console.log("formatGameDate input:", {
-        date,
-        time,
-        dateType: typeof date,
-        timeType: typeof time,
-      });
-
-      // Handle cases where date or time might be null, undefined, or invalid
-      if (!date || !time) {
-        console.log("Missing date or time:", { date, time });
-        return "Date TBD";
-      }
-
-      // Ensure the date string is in a valid format
-      let dateStr = date;
-      if (date.includes("T")) {
-        // If date already includes time, use it as is
-        dateStr = date;
-      } else {
-        // Otherwise, combine date and time
-        // Handle different time formats
-        let timeStr = time;
-        if (time && !time.includes(":")) {
-          // If time is just a number (e.g., "1900"), convert to "19:00"
-          if (time.length === 4) {
-            timeStr = `${time.substring(0, 2)}:${time.substring(2, 4)}`;
-          }
-        }
-        dateStr = `${date}T${timeStr}`;
-      }
-
-      console.log("Formatted date string:", dateStr);
-      const gameDate = new Date(dateStr);
-
-      // Check if the date is valid
-      if (isNaN(gameDate.getTime())) {
-        console.log("Invalid date created from:", dateStr);
-        return "Date TBD";
-      }
-
-      return gameDate.toLocaleDateString("en-US", {
-        weekday: "short",
+  const formatActivityDate = (dateString: string) => {
+    return formatDateTime(
+      dateString,
+      language,
+      {
         month: "short",
         day: "numeric",
-      });
+        hour: "2-digit",
+        minute: "2-digit",
+      },
+      t
+    );
+  };
+
+  const formatGameDateWithTime = (date: string, time: string) => {
+    try {
+      if (!date || !time) {
+        return t("dateTime.dateTBD");
+      }
+
+      // Handle different time formats
+      let timeStr = time;
+      if (time && !time.includes(":")) {
+        if (time.length === 4) {
+          timeStr = `${time.substring(0, 2)}:${time.substring(2, 4)}`;
+        }
+      }
+
+      const dateStr = `${date}T${timeStr}`;
+      const gameDate = new Date(dateStr);
+
+      if (isNaN(gameDate.getTime())) {
+        return t("dateTime.dateTBD");
+      }
+
+      return formatGameDate(date, language, t);
     } catch (error) {
       console.error("Error formatting game date:", error, { date, time });
-      return "Date TBD";
+      return t("dateTime.dateTBD");
     }
   };
 
@@ -621,14 +620,14 @@ function DashboardPage() {
                           </Typography>
                         }
                         secondary={
-                          <React.Fragment>
+                          <Box component="div">
                             <Typography
                               variant="body2"
                               color="text.secondary"
                               component="span"
                               display="block"
                             >
-                              {formatGameDate(game.date, game.time)}
+                              {formatGameDateWithTime(game.date, game.time)}
                             </Typography>
                             <Typography
                               variant="body2"
@@ -649,7 +648,7 @@ function DashboardPage() {
                                 />
                               ))}
                             </Box>
-                          </React.Fragment>
+                          </Box>
                         }
                       />
                     </ListItem>
@@ -724,11 +723,11 @@ function DashboardPage() {
                             variant="body1"
                             sx={{ fontWeight: 500 }}
                           >
-                            {activity.title}
+                            {getActivityTitle(activity.type)}
                           </Typography>
                         }
                         secondary={
-                          <React.Fragment>
+                          <Box component="div">
                             <Typography
                               variant="body2"
                               color="text.secondary"
@@ -743,9 +742,9 @@ function DashboardPage() {
                               component="span"
                               display="block"
                             >
-                              {formatDate(activity.timestamp)}
+                              {formatActivityDate(activity.timestamp)}
                             </Typography>
-                          </React.Fragment>
+                          </Box>
                         }
                       />
                     </ListItem>

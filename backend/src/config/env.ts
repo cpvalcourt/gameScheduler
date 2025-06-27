@@ -51,8 +51,8 @@ const config: EnvConfig = {
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '24h',
   
   // Email
-  SMTP_HOST: process.env.SMTP_HOST || '',
-  SMTP_PORT: parseInt(process.env.SMTP_PORT || '587', 10),
+  SMTP_HOST: process.env.SMTP_HOST || 'localhost',
+  SMTP_PORT: parseInt(process.env.SMTP_PORT || '1025', 10),
   SMTP_USER: process.env.SMTP_USER || '',
   SMTP_PASS: process.env.SMTP_PASS || '',
   

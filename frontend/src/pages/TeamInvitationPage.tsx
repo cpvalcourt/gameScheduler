@@ -19,6 +19,8 @@ import {
 } from "@mui/icons-material";
 import { teamInvitationsApi } from "../api/team-invitations";
 import NavigationHeader from "../components/NavigationHeader";
+import { useI18n } from "../contexts/I18nContext";
+import { formatDate } from "../utils/dateUtils";
 
 const TeamInvitationPage = () => {
   const { token } = useParams<{ token: string }>();
@@ -27,6 +29,7 @@ const TeamInvitationPage = () => {
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState(null);
   const [invitation, setInvitation] = useState(null);
+  const { t, language } = useI18n();
 
   useEffect(() => {
     if (token) {
@@ -37,11 +40,11 @@ const TeamInvitationPage = () => {
   const loadInvitation = async () => {
     try {
       setLoading(true);
-      // We'll need to add a method to get invitation by token
-      // For now, we'll handle this in the accept/decline methods
-      setLoading(false);
+      const response = await teamInvitationsApi.getInvitationByToken(token!);
+      setInvitation(response.invitation);
     } catch (err: any) {
       setError(err.response?.data?.message || "Failed to load invitation");
+    } finally {
       setLoading(false);
     }
   };
@@ -151,12 +154,12 @@ const TeamInvitationPage = () => {
             </Typography>
 
             <Box display="flex" alignItems="center" gap={1} mb={1}>
-              {invitation?.role && getRoleIcon(invitation.role)}
+              {invitation?.invited_role && getRoleIcon(invitation.invited_role)}
               <Typography variant="body1">
                 Role:{" "}
                 <strong>
-                  {invitation?.role?.charAt(0).toUpperCase() +
-                    invitation?.role?.slice(1)}
+                  {invitation?.invited_role?.charAt(0).toUpperCase() +
+                    invitation?.invited_role?.slice(1)}
                 </strong>
               </Typography>
             </Box>
@@ -167,18 +170,19 @@ const TeamInvitationPage = () => {
               </Typography>
             )}
 
-            {invitation?.invited_by && (
+            {invitation?.invited_by_username && (
               <Typography variant="body1" mb={1}>
-                Invited by: <strong>{invitation.invited_by}</strong>
+                Invited by: <strong>{invitation.invited_by_username}</strong>
               </Typography>
             )}
 
             {invitation?.expires_at && (
               <Box mt={2}>
                 <Chip
-                  label={`Expires: ${new Date(
-                    invitation.expires_at
-                  ).toLocaleDateString()}`}
+                  label={`Expires: ${formatDate(
+                    invitation.expires_at,
+                    language
+                  )}`}
                   color="warning"
                   size="small"
                 />

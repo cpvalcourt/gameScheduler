@@ -42,8 +42,14 @@ const invitationIdValidation = [
 router.post('/send', sendInvitationValidation, TeamInvitationController.sendInvitation);
 router.get('/team/:teamId', TeamInvitationController.getTeamInvitations);
 router.get('/my-invitations', TeamInvitationController.getMyInvitations);
+router.get('/token/:token', tokenValidation, TeamInvitationController.getInvitationByToken);
 router.post('/accept/:token', tokenValidation, TeamInvitationController.acceptInvitation);
 router.post('/decline/:token', tokenValidation, TeamInvitationController.declineInvitation);
 router.delete('/:teamId/:invitationId', invitationIdValidation, TeamInvitationController.deleteInvitation);
+
+// Service-based routes with enhanced error handling and response structure
+router.post('/service/accept/:token', tokenValidation, TeamInvitationController.acceptInvitationWithService);
+router.post('/service/decline/:token', tokenValidation, TeamInvitationController.declineInvitationWithService);
+router.get('/service/token/:token', tokenValidation, TeamInvitationController.getInvitationDetailsWithService);
 
 export default router; 

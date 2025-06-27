@@ -1,12 +1,45 @@
 import '@testing-library/jest-dom';
-import { afterEach } from 'vitest';
+import { afterEach, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
-import { vi } from 'vitest';
 import { render } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "../contexts/AuthContext";
 import { I18nProvider } from "../contexts/I18nContext";
 import React, { type ReactElement } from "react";
+
+// Mock the API service
+vi.mock('../services/api', () => {
+  const mockGet = vi.fn();
+  const mockPost = vi.fn();
+  const mockPut = vi.fn();
+  const mockDelete = vi.fn();
+
+  const mockApi = {
+    get: mockGet,
+    post: mockPost,
+    put: mockPut,
+    delete: mockDelete,
+    interceptors: {
+      request: { use: vi.fn() },
+      response: { use: vi.fn() }
+    },
+    defaults: {
+      baseURL: 'http://localhost:3002/api',
+      headers: {
+        'Content-Type': 'application/json',
+        common: {}
+      }
+    }
+  };
+
+  return {
+    default: mockApi,
+    uploadProfilePicture: vi.fn(),
+    deleteProfilePicture: vi.fn(),
+    updateProfile: vi.fn(),
+    deleteAccount: vi.fn()
+  };
+});
 
 // Suppress React Router future flag warnings
 const originalWarn = console.warn;

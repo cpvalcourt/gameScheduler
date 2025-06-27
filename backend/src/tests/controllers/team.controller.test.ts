@@ -29,7 +29,7 @@ describe('TeamController', () => {
 
   describe('createTeam', () => {
     it('should create a team successfully', async () => {
-      const mockUser = { id: 1, email: 'test@example.com' };
+      const mockUser = { id: 1, email: 'test@example.com', username: 'testuser', role: 'user' };
       const mockTeam = {
         id: 1,
         name: 'Test Team',
@@ -55,7 +55,7 @@ describe('TeamController', () => {
     });
 
     it('should return 400 if team name is missing', async () => {
-      const mockUser = { id: 1, email: 'test@example.com' };
+      const mockUser = { id: 1, email: 'test@example.com', username: 'testuser', role: 'user' };
 
       mockRequest = {
         body: { description: 'A test team' },
@@ -136,7 +136,7 @@ describe('TeamController', () => {
 
   describe('updateTeam', () => {
     it('should update team successfully', async () => {
-      const mockUser = { id: 1, email: 'test@example.com' };
+      const mockUser = { id: 1, email: 'test@example.com', username: 'testuser', role: 'user' };
       const mockTeam = {
         id: 1,
         name: 'Updated Team',
@@ -164,7 +164,7 @@ describe('TeamController', () => {
     });
 
     it('should return 403 if user is not team admin', async () => {
-      const mockUser = { id: 1, email: 'test@example.com' };
+      const mockUser = { id: 1, email: 'test@example.com', username: 'testuser', role: 'user' };
 
       mockRequest = {
         params: { id: '1' },
@@ -183,7 +183,7 @@ describe('TeamController', () => {
 
   describe('deleteTeam', () => {
     it('should delete team successfully', async () => {
-      const mockUser = { id: 1, email: 'test@example.com' };
+      const mockUser = { id: 1, email: 'test@example.com', username: 'testuser', role: 'user' };
 
       mockRequest = {
         params: { id: '1' },
@@ -201,7 +201,7 @@ describe('TeamController', () => {
     });
 
     it('should return 403 if user is not team admin', async () => {
-      const mockUser = { id: 1, email: 'test@example.com' };
+      const mockUser = { id: 1, email: 'test@example.com', username: 'testuser', role: 'user' };
 
       mockRequest = {
         params: { id: '1' },
@@ -219,7 +219,7 @@ describe('TeamController', () => {
 
   describe('getUserTeams', () => {
     it('should return user teams successfully', async () => {
-      const mockUser = { id: 1, email: 'test@example.com' };
+      const mockUser = { id: 1, email: 'test@example.com', username: 'testuser', role: 'user' };
       const mockTeams = [
         {
           id: 1,
@@ -256,7 +256,7 @@ describe('TeamController', () => {
 
   describe('getTeamStats', () => {
     it('should return team statistics successfully', async () => {
-      const mockUser = { id: 1, email: 'test@example.com' };
+      const mockUser = { id: 1, email: 'test@example.com', username: 'testuser', role: 'user' };
       const mockStats = {
         totalMembers: 5,
         admins: 1,
@@ -281,7 +281,7 @@ describe('TeamController', () => {
     });
 
     it('should return 403 if user is not team member', async () => {
-      const mockUser = { id: 1, email: 'test@example.com' };
+      const mockUser = { id: 1, email: 'test@example.com', username: 'testuser', role: 'user' };
 
       mockRequest = {
         params: { id: '1' },

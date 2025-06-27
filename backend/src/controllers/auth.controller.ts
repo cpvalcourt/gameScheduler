@@ -44,11 +44,11 @@ export class AuthController {
             const transporter = nodemailer.createTransport({
                 host: config.SMTP_HOST,
                 port: config.SMTP_PORT,
-                secure: config.SMTP_PORT === 465,
-                auth: {
+                secure: false, // MailHog doesn't use SSL
+                auth: config.SMTP_USER && config.SMTP_PASS ? {
                     user: config.SMTP_USER,
                     pass: config.SMTP_PASS
-                }
+                } : undefined
             });
 
             // Send verification email
@@ -153,11 +153,11 @@ export class AuthController {
             const transporter = nodemailer.createTransport({
                 host: config.SMTP_HOST,
                 port: config.SMTP_PORT,
-                secure: config.SMTP_PORT === 465,
-                auth: {
+                secure: false, // MailHog doesn't use SSL
+                auth: config.SMTP_USER && config.SMTP_PASS ? {
                     user: config.SMTP_USER,
                     pass: config.SMTP_PASS
-                }
+                } : undefined
             });
 
             console.log('Sending password reset email to:', email);
@@ -269,11 +269,11 @@ export class AuthController {
             const transporter = nodemailer.createTransport({
                 host: config.SMTP_HOST,
                 port: config.SMTP_PORT,
-                secure: config.SMTP_PORT === 465,
-                auth: {
+                secure: false, // MailHog doesn't use SSL
+                auth: config.SMTP_USER && config.SMTP_PASS ? {
                     user: config.SMTP_USER,
                     pass: config.SMTP_PASS
-                }
+                } : undefined
             });
 
             const verificationLink = `${config.FRONTEND_URL}/verify-email/${newToken}`;

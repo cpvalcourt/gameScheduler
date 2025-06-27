@@ -102,11 +102,11 @@ class GameModel {
     }
     static async getGameTeams(gameId) {
         const query = `
-            SELECT t.TEAM_ID, t.NAME, t.CREATED_AT
+            SELECT t.id as team_id, t.name, t.created_at
             FROM GAME_TEAMS gt
-            JOIN TEAMS t ON gt.TEAM_ID = t.TEAM_ID
+            JOIN TEAMS t ON gt.TEAM_ID = t.id
             WHERE gt.GAME_ID = ?
-            ORDER BY t.CREATED_AT DESC
+            ORDER BY t.created_at DESC
         `;
         const [rows] = await database_1.pool.query(query, [gameId]);
         return rows;

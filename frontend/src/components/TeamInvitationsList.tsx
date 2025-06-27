@@ -23,6 +23,9 @@ import {
 } from "@mui/icons-material";
 import { teamInvitationsApi } from "../api/team-invitations";
 import type { TeamInvitation } from "../api/team-invitations";
+import { useI18n } from "../contexts/I18nContext";
+import { useAuth } from "../contexts/AuthContext";
+import { formatDate } from "../utils/dateUtils";
 
 interface TeamInvitationsListProps {
   teamId: number;
@@ -40,6 +43,7 @@ const TeamInvitationsList = ({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [invitationToDelete, setInvitationToDelete] =
     useState<TeamInvitation | null>(null);
+  const { t, language } = useI18n();
 
   useEffect(() => {
     loadInvitations();
@@ -176,32 +180,29 @@ const TeamInvitationsList = ({
                   <EmailIcon color="action" />
                   <Box>
                     <Typography variant="body1" fontWeight="medium">
-                      {invitation.email}
+                      {invitation.invited_email}
                     </Typography>
                     <Box display="flex" alignItems="center" gap={1} mt={0.5}>
-                      {getRoleIcon(invitation.role)}
+                      {getRoleIcon(invitation.invited_role)}
                       <Typography variant="body2" color="text.secondary">
-                        {invitation.role.charAt(0).toUpperCase() +
-                          invitation.role.slice(1)}
+                        {invitation.invited_role.charAt(0).toUpperCase() +
+                          invitation.invited_role.slice(1)}
                       </Typography>
-                      {invitation.invited_by && (
+                      {invitation.invited_by_username && (
                         <>
                           <Typography variant="body2" color="text.secondary">
-                            • Invited by {invitation.invited_by}
+                            • Invited by {invitation.invited_by_username}
                           </Typography>
                         </>
                       )}
                     </Box>
-                    <Typography variant="caption" color="text.secondary">
-                      Sent:{" "}
-                      {new Date(invitation.created_at).toLocaleDateString()}
-                      {invitation.status === "pending" && (
-                        <>
-                          {" "}
-                          • Expires:{" "}
-                          {new Date(invitation.expires_at).toLocaleDateString()}
-                        </>
-                      )}
+                    <Typography variant="body2" color="text.secondary">
+                      {t("teamInvitations.created")}:{" "}
+                      {formatDate(invitation.created_at, language)}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {t("teamInvitations.expires")}:{" "}
+                      {formatDate(invitation.expires_at, language)}
                     </Typography>
                   </Box>
                 </Box>
@@ -241,7 +242,7 @@ const TeamInvitationsList = ({
         <DialogContent>
           <Typography>
             Are you sure you want to delete the invitation for{" "}
-            <strong>{invitationToDelete?.email}</strong>?
+            <strong>{invitationToDelete?.invited_email}</strong>?
           </Typography>
           <Typography variant="body2" color="text.secondary" mt={1}>
             This action cannot be undone.

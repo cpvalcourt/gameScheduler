@@ -35,6 +35,8 @@ describe('User Profile Management', () => {
             expect(response.body.user).toHaveProperty('email');
             expect(response.body.user).toHaveProperty('username');
             expect(response.body.user).toHaveProperty('is_verified');
+            expect(response.body.user).toHaveProperty('role');
+            expect(response.body.user).toHaveProperty('is_active');
             expect(response.body.user).toHaveProperty('created_at');
         });
         it('should return 401 without auth token', async () => {
@@ -58,6 +60,8 @@ describe('User Profile Management', () => {
             expect(response.body.message).toBe('Profile updated successfully');
             expect(response.body.user.username).toBe(updateData.username);
             expect(response.body.user.email).toBe(updateData.email);
+            expect(response.body.user).toHaveProperty('role');
+            expect(response.body.user).toHaveProperty('is_active');
         });
         it('should return 400 for missing fields', async () => {
             const response = await (0, supertest_1.default)(app_1.default)

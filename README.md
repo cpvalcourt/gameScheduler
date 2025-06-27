@@ -38,6 +38,54 @@ game-scheduler/
 - Node.js (v18 or higher)
 - MySQL (v8 or higher)
 - npm or yarn
+- Docker (for MailHog email testing)
+
+### Email Testing Setup (MailHog)
+
+This project uses **MailHog** for email testing in development. MailHog is a development mail server that captures all outgoing emails and provides a web interface to view them.
+
+#### Installing MailHog with Docker
+
+1. **Start MailHog:**
+
+   ```bash
+   docker run -d -p 1025:1025 -p 8025:8025 mailhog/mailhog
+   ```
+
+   This command:
+
+   - Runs MailHog in detached mode (`-d`)
+   - Maps port 1025 for SMTP (email sending)
+   - Maps port 8025 for the web interface (email viewing)
+
+2. **Access MailHog Web Interface:**
+
+   Open your browser and navigate to: `http://localhost:8025`
+
+   This is where you can view all emails sent by the application during development.
+
+3. **Verify MailHog is Running:**
+
+   ```bash
+   docker ps
+   ```
+
+   You should see the MailHog container running.
+
+#### Alternative Installation Methods
+
+**Using Homebrew (macOS):**
+
+```bash
+brew install mailhog
+mailhog
+```
+
+**Using Go:**
+
+```bash
+go install github.com/mailhog/MailHog@latest
+```
 
 ### Backend Setup
 
@@ -56,11 +104,29 @@ game-scheduler/
 3. Create a `.env` file with the following variables:
 
    ```
+   # Server Configuration
+   PORT=3002
+   NODE_ENV=development
+
+   # Database Configuration
    DB_HOST=localhost
+   DB_PORT=3306
    DB_USER=your_username
    DB_PASSWORD=your_password
    DB_NAME=game_scheduler
+
+   # Email Configuration (MailHog for development)
+   SMTP_HOST=localhost
+   SMTP_PORT=1025
+   SMTP_USER=
+   SMTP_PASS=
+
+   # JWT Configuration
    JWT_SECRET=your_jwt_secret
+   JWT_EXPIRES_IN=24h
+
+   # Frontend URL (for email links)
+   FRONTEND_URL=http://localhost:5173
    ```
 
 4. Run database migrations:
@@ -73,6 +139,22 @@ game-scheduler/
    ```bash
    npm run dev
    ```
+
+### Testing Email Functionality
+
+With MailHog running, you can test all email functionality:
+
+1. **Register a new user** - Verification emails will be captured by MailHog
+2. **Request password reset** - Reset emails will be captured by MailHog
+3. **Send team invitations** - Invitation emails will be captured by MailHog
+
+**To view captured emails:**
+
+- Open `http://localhost:8025` in your browser
+- All emails sent by the application will appear in the MailHog interface
+- You can view email content, headers, and test email links
+
+**Note:** MailHog is for development only. For production, configure a real SMTP server in your `.env` file.
 
 ### Frontend Setup
 
@@ -309,6 +391,13 @@ DB_USER=your_username
 DB_PASSWORD=your_password
 DB_NAME=game_scheduler_test
 JWT_SECRET=test_jwt_secret
+
+# Email Configuration (MailHog for testing)
+SMTP_HOST=localhost
+SMTP_PORT=1025
+SMTP_USER=
+SMTP_PASS=
+FRONTEND_URL=http://localhost:5173
 ```
 
 ### Troubleshooting Tests

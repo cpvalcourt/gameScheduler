@@ -37,11 +37,11 @@ class AuthController {
             const transporter = nodemailer_1.default.createTransport({
                 host: env_1.default.SMTP_HOST,
                 port: env_1.default.SMTP_PORT,
-                secure: env_1.default.SMTP_PORT === 465,
-                auth: {
+                secure: false, // MailHog doesn't use SSL
+                auth: env_1.default.SMTP_USER && env_1.default.SMTP_PASS ? {
                     user: env_1.default.SMTP_USER,
                     pass: env_1.default.SMTP_PASS
-                }
+                } : undefined
             });
             // Send verification email
             await transporter.sendMail({
@@ -126,11 +126,11 @@ class AuthController {
             const transporter = nodemailer_1.default.createTransport({
                 host: env_1.default.SMTP_HOST,
                 port: env_1.default.SMTP_PORT,
-                secure: env_1.default.SMTP_PORT === 465,
-                auth: {
+                secure: false, // MailHog doesn't use SSL
+                auth: env_1.default.SMTP_USER && env_1.default.SMTP_PASS ? {
                     user: env_1.default.SMTP_USER,
                     pass: env_1.default.SMTP_PASS
-                }
+                } : undefined
             });
             console.log('Sending password reset email to:', email);
             // Send email
@@ -223,11 +223,11 @@ class AuthController {
             const transporter = nodemailer_1.default.createTransport({
                 host: env_1.default.SMTP_HOST,
                 port: env_1.default.SMTP_PORT,
-                secure: env_1.default.SMTP_PORT === 465,
-                auth: {
+                secure: false, // MailHog doesn't use SSL
+                auth: env_1.default.SMTP_USER && env_1.default.SMTP_PASS ? {
                     user: env_1.default.SMTP_USER,
                     pass: env_1.default.SMTP_PASS
-                }
+                } : undefined
             });
             const verificationLink = `${env_1.default.FRONTEND_URL}/verify-email/${newToken}`;
             // Send verification email

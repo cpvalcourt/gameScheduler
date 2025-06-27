@@ -21,6 +21,11 @@ import {
   CircularProgress,
   IconButton,
   Tooltip,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemSecondaryAction,
+  Divider,
 } from "@mui/material";
 import type { SelectChangeEvent } from "@mui/material/Select";
 import {
@@ -29,7 +34,11 @@ import {
   Delete as DeleteIcon,
   CalendarToday as CalendarIcon,
   Schedule as ScheduleIcon,
+  LocationOn as LocationOnIcon,
+  Group as GroupIcon,
+  SportsEsports as SportsEsportsIcon,
 } from "@mui/icons-material";
+import { useI18n } from "../../contexts/I18nContext";
 import type {
   RecurringPattern,
   CreateRecurringPatternData,
@@ -39,6 +48,12 @@ import {
   getRecurringPatterns,
   generateGamesFromPattern,
 } from "../../api/advanced-scheduling";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { fr } from "date-fns/locale/fr";
+import { es } from "date-fns/locale/es";
+import { enUS } from "date-fns/locale/en-US";
 
 interface RecurringPatternsTabProps {
   onError: (error: string) => void;
@@ -49,6 +64,7 @@ const RecurringPatternsTab = ({
   onError,
   onLoading,
 }: RecurringPatternsTabProps) => {
+  const { t, language } = useI18n();
   const [patterns, setPatterns] = useState<RecurringPattern[]>([]);
   const [series, setSeries] = useState<any[]>([]);
   const [openDialog, setOpenDialog] = useState(false);
@@ -81,21 +97,23 @@ const RecurringPatternsTab = ({
   const endDateInputRef = useRef<HTMLInputElement>(null);
 
   const daysOfWeek = [
-    { value: 0, label: "Sunday" },
-    { value: 1, label: "Monday" },
-    { value: 2, label: "Tuesday" },
-    { value: 3, label: "Wednesday" },
-    { value: 4, label: "Thursday" },
-    { value: 5, label: "Friday" },
-    { value: 6, label: "Saturday" },
+    { value: 0, label: t("advancedScheduling.sunday") },
+    { value: 1, label: t("advancedScheduling.monday") },
+    { value: 2, label: t("advancedScheduling.tuesday") },
+    { value: 3, label: t("advancedScheduling.wednesday") },
+    { value: 4, label: t("advancedScheduling.thursday") },
+    { value: 5, label: t("advancedScheduling.friday") },
+    { value: 6, label: t("advancedScheduling.saturday") },
   ];
 
   const frequencies = [
-    { value: "weekly", label: "Weekly" },
-    { value: "bi_weekly", label: "Bi-weekly" },
-    { value: "monthly", label: "Monthly" },
-    { value: "custom", label: "Custom" },
+    { value: "weekly", label: t("advancedScheduling.weekly") },
+    { value: "bi_weekly", label: t("advancedScheduling.biWeekly") },
+    { value: "monthly", label: t("advancedScheduling.monthly") },
+    { value: "custom", label: t("advancedScheduling.custom") },
   ];
+
+  const localeMap = { en: enUS, fr: fr, es: es };
 
   useEffect(() => {
     loadData();
@@ -120,7 +138,7 @@ const RecurringPatternsTab = ({
         await loadPatterns(mockSeries[0].id);
       }
     } catch (error) {
-      onError("Failed to load data");
+      onError(t("advancedScheduling.failedToLoadTeams"));
       console.error("Error loading data:", error);
     } finally {
       setLoading(false);
@@ -156,7 +174,7 @@ const RecurringPatternsTab = ({
 
       setPatterns(mockPatterns);
     } catch (error) {
-      onError("Failed to load recurring patterns");
+      onError(t("advancedScheduling.patternCreateError"));
       console.error("Error loading patterns:", error);
     }
   };
@@ -171,7 +189,7 @@ const RecurringPatternsTab = ({
 
   const handleSubmit = async () => {
     if (!selectedSeries) {
-      onError("Please select a game series");
+      onError(t("advancedScheduling.pleaseSelectSeries"));
       return;
     }
 
@@ -203,10 +221,10 @@ const RecurringPatternsTab = ({
           .split("T")[0],
       });
 
-      onError("Pattern created successfully! (Demo mode)");
+      onError(t("advancedScheduling.patternCreated"));
       await loadPatterns(selectedSeries);
     } catch (error) {
-      onError("Failed to create recurring pattern");
+      onError(t("advancedScheduling.patternCreateError"));
       console.error("Error creating pattern:", error);
     } finally {
       setLoading(false);
@@ -221,9 +239,9 @@ const RecurringPatternsTab = ({
       // Simulate API delay
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
-      onError("Games generated successfully! (Demo mode)");
+      onError(t("advancedScheduling.gamesGenerated"));
     } catch (error) {
-      onError("Failed to generate games");
+      onError(t("advancedScheduling.gamesGenerateError"));
       console.error("Error generating games:", error);
     } finally {
       setGenerating(null);
@@ -247,7 +265,7 @@ const RecurringPatternsTab = ({
         mb={3}
       >
         <Typography variant="h5" component="h2">
-          Recurring Patterns
+          {t("advancedScheduling.recurringPatterns")}
         </Typography>
         <Button
           variant="contained"
@@ -255,24 +273,22 @@ const RecurringPatternsTab = ({
           onClick={() => setOpenDialog(true)}
           disabled={!selectedSeries}
         >
-          Create Pattern
+          {t("advancedScheduling.createPattern")}
         </Button>
       </Box>
 
       {series.length === 0 ? (
-        <Alert severity="info">
-          No game series found. Please create a game series first.
-        </Alert>
+        <Alert severity="info">{t("advancedScheduling.noGameSeries")}</Alert>
       ) : (
         <>
           <FormControl fullWidth sx={{ mb: 3 }}>
-            <InputLabel>Game Series</InputLabel>
+            <InputLabel>{t("gameSeries.title")}</InputLabel>
             <Select
               value={selectedSeries}
-              label="Game Series"
+              label={t("gameSeries.title")}
               onChange={handleSeriesChange}
               inputProps={{
-                "aria-label": "Select game series",
+                "aria-label": t("advancedScheduling.selectTeam"),
               }}
             >
               {series.map((s) => (
@@ -284,10 +300,7 @@ const RecurringPatternsTab = ({
           </FormControl>
 
           {patterns.length === 0 ? (
-            <Alert severity="info">
-              No recurring patterns found for this series. Create your first
-              pattern to get started.
-            </Alert>
+            <Alert severity="info">{t("advancedScheduling.noPatterns")}</Alert>
           ) : (
             <Grid container spacing={2}>
               {patterns.map((pattern) => (
@@ -332,15 +345,20 @@ const RecurringPatternsTab = ({
                       </Box>
 
                       <Typography variant="body2">
-                        <strong>Location:</strong> {pattern.location}
+                        <strong>{t("advancedScheduling.location")}:</strong>{" "}
+                        {pattern.location}
                       </Typography>
                       <Typography variant="body2">
-                        <strong>Players:</strong> {pattern.min_players} -{" "}
-                        {pattern.max_players}
+                        <strong>
+                          {t("advancedScheduling.availablePlayers")}:
+                        </strong>{" "}
+                        {pattern.min_players} - {pattern.max_players}
                       </Typography>
                       <Typography variant="body2">
-                        <strong>Active:</strong>{" "}
-                        {pattern.is_active ? "Yes" : "No"}
+                        <strong>{t("advancedScheduling.status")}:</strong>{" "}
+                        {pattern.is_active
+                          ? t("advancedScheduling.yes")
+                          : t("advancedScheduling.no")}
                       </Typography>
                     </CardContent>
                     <CardActions>
@@ -351,10 +369,10 @@ const RecurringPatternsTab = ({
                         disabled={generating === pattern.id}
                       >
                         {generating === pattern.id
-                          ? "Generating..."
-                          : "Generate Games"}
+                          ? t("advancedScheduling.generating")
+                          : t("advancedScheduling.generateGames")}
                       </Button>
-                      <Tooltip title="Delete Pattern">
+                      <Tooltip title={t("advancedScheduling.deletePattern")}>
                         <IconButton size="small" color="error">
                           <DeleteIcon />
                         </IconButton>
@@ -375,13 +393,13 @@ const RecurringPatternsTab = ({
         maxWidth="md"
         fullWidth
       >
-        <DialogTitle>Create Recurring Pattern</DialogTitle>
+        <DialogTitle>{t("advancedScheduling.createPattern")}</DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                label="Pattern Name"
+                label={t("advancedScheduling.patternName")}
                 value={formData.name}
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
@@ -393,7 +411,7 @@ const RecurringPatternsTab = ({
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                label="Description"
+                label={t("advancedScheduling.description")}
                 multiline
                 rows={3}
                 value={formData.description}
@@ -403,277 +421,202 @@ const RecurringPatternsTab = ({
               />
             </Grid>
 
-            <Grid item xs={6}>
+            <Grid item xs={12} sm={6}>
               <FormControl fullWidth>
-                <InputLabel>Frequency</InputLabel>
+                <InputLabel>{t("advancedScheduling.frequency")}</InputLabel>
                 <Select
                   value={formData.frequency}
-                  label="Frequency"
+                  label={t("advancedScheduling.frequency")}
                   onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      frequency: e.target.value as any,
-                    })
+                    setFormData({ ...formData, frequency: e.target.value })
                   }
-                  inputProps={{
-                    "aria-label": "Select frequency",
-                  }}
                 >
-                  {frequencies.map((f) => (
-                    <MenuItem key={f.value} value={f.value}>
-                      {f.label}
+                  {frequencies.map((freq) => (
+                    <MenuItem key={freq.value} value={freq.value}>
+                      {freq.label}
                     </MenuItem>
                   ))}
                 </Select>
               </FormControl>
             </Grid>
 
-            <Grid item xs={6}>
-              <FormControl fullWidth>
-                <InputLabel>Day of Week</InputLabel>
-                <Select
-                  value={formData.day_of_week}
-                  label="Day of Week"
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      day_of_week: e.target.value as number,
-                    })
-                  }
-                  inputProps={{
-                    "aria-label": "Select day of week",
-                  }}
-                >
-                  {daysOfWeek.map((d) => (
-                    <MenuItem key={d.value} value={d.value}>
-                      {d.label}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-
-            <Grid item xs={6}>
+            <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label="Start Time"
+                type="number"
+                label={t("advancedScheduling.interval")}
+                value={formData.interval}
+                onChange={(e) =>
+                  setFormData({ ...formData, interval: Number(e.target.value) })
+                }
+                inputProps={{ min: 1 }}
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={6}>
+              <FormControl fullWidth>
+                <InputLabel>{t("advancedScheduling.dayOfWeek")}</InputLabel>
+                <Select
+                  value={formData.day_of_week}
+                  label={t("advancedScheduling.dayOfWeek")}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      day_of_week: Number(e.target.value),
+                    })
+                  }
+                >
+                  {daysOfWeek.map((day) => (
+                    <MenuItem key={day.value} value={day.value}>
+                      {day.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
                 type="time"
+                label={t("advancedScheduling.startTime")}
                 value={formData.start_time}
                 onChange={(e) =>
                   setFormData({ ...formData, start_time: e.target.value })
                 }
                 inputRef={startTimeInputRef}
-                InputLabelProps={{ shrink: true }}
-                InputProps={{
-                  endAdornment: (
-                    <Box
-                      onClick={() => {
-                        if (startTimeInputRef.current) {
-                          startTimeInputRef.current.showPicker();
-                        }
-                      }}
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        cursor: "pointer",
-                        padding: "4px",
-                        borderRadius: "4px",
-                        "&:hover": {
-                          backgroundColor: "rgba(25, 118, 210, 0.08)",
-                        },
-                      }}
-                    >
-                      <ScheduleIcon
-                        sx={{
-                          color: "#1976d2",
-                          fontSize: "20px",
-                        }}
-                      />
-                    </Box>
-                  ),
-                }}
               />
             </Grid>
 
-            <Grid item xs={6}>
+            <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label="End Time"
                 type="time"
+                label={t("advancedScheduling.endTime")}
                 value={formData.end_time}
                 onChange={(e) =>
                   setFormData({ ...formData, end_time: e.target.value })
                 }
                 inputRef={endTimeInputRef}
-                InputLabelProps={{ shrink: true }}
-                InputProps={{
-                  endAdornment: (
-                    <Box
-                      onClick={() => {
-                        if (endTimeInputRef.current) {
-                          endTimeInputRef.current.showPicker();
-                        }
-                      }}
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        cursor: "pointer",
-                        padding: "4px",
-                        borderRadius: "4px",
-                        "&:hover": {
-                          backgroundColor: "rgba(25, 118, 210, 0.08)",
-                        },
-                      }}
-                    >
-                      <ScheduleIcon
-                        sx={{
-                          color: "#1976d2",
-                          fontSize: "20px",
-                        }}
-                      />
-                    </Box>
-                  ),
-                }}
               />
             </Grid>
 
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                label="Location"
+                label={t("advancedScheduling.location")}
                 value={formData.location}
                 onChange={(e) =>
                   setFormData({ ...formData, location: e.target.value })
                 }
-                required
               />
             </Grid>
 
-            <Grid item xs={6}>
+            <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label="Min Players"
                 type="number"
+                label={t("advancedScheduling.minPlayers")}
                 value={formData.min_players}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    min_players: parseInt(e.target.value),
+                    min_players: Number(e.target.value),
                   })
                 }
-                inputProps={{ min: 1, max: 100 }}
+                inputProps={{ min: 1 }}
               />
             </Grid>
 
-            <Grid item xs={6}>
+            <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label="Max Players"
                 type="number"
+                label={t("advancedScheduling.maxPlayers")}
                 value={formData.max_players}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    max_players: parseInt(e.target.value),
+                    max_players: Number(e.target.value),
                   })
                 }
-                inputProps={{ min: 1, max: 100 }}
+                inputProps={{ min: 1 }}
               />
             </Grid>
 
-            <Grid item xs={6}>
-              <TextField
-                fullWidth
-                label="Start Date"
-                type="date"
-                value={formData.start_date}
-                onChange={(e) =>
-                  setFormData({ ...formData, start_date: e.target.value })
-                }
-                inputRef={startDateInputRef}
-                InputLabelProps={{ shrink: true }}
-                InputProps={{
-                  endAdornment: (
-                    <Box
-                      onClick={() => {
-                        if (startDateInputRef.current) {
-                          startDateInputRef.current.showPicker();
-                        }
-                      }}
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        cursor: "pointer",
-                        padding: "4px",
-                        borderRadius: "4px",
-                        "&:hover": {
-                          backgroundColor: "rgba(25, 118, 210, 0.08)",
-                        },
-                      }}
-                    >
-                      <CalendarIcon
-                        sx={{
-                          color: "#1976d2",
-                          fontSize: "20px",
-                        }}
-                      />
-                    </Box>
-                  ),
-                }}
-              />
+            <Grid item xs={12} sm={6}>
+              <LocalizationProvider
+                dateAdapter={AdapterDateFns}
+                adapterLocale={localeMap[language] || enUS}
+              >
+                <DatePicker
+                  label={t("advancedScheduling.startDate")}
+                  value={
+                    formData.start_date ? new Date(formData.start_date) : null
+                  }
+                  onChange={(newValue) =>
+                    setFormData({
+                      ...formData,
+                      start_date: newValue
+                        ? newValue.toISOString().split("T")[0]
+                        : "",
+                    })
+                  }
+                  format={
+                    language === "fr" || language === "es"
+                      ? "dd/MM/yyyy"
+                      : "MM/dd/yyyy"
+                  }
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      placeholder: t("dateTime.dateFormat"),
+                      inputRef: startDateInputRef,
+                    },
+                  }}
+                />
+              </LocalizationProvider>
             </Grid>
 
-            <Grid item xs={6}>
-              <TextField
-                fullWidth
-                label="End Date"
-                type="date"
-                value={formData.end_date}
-                onChange={(e) =>
-                  setFormData({ ...formData, end_date: e.target.value })
-                }
-                inputRef={endDateInputRef}
-                InputLabelProps={{ shrink: true }}
-                InputProps={{
-                  endAdornment: (
-                    <Box
-                      onClick={() => {
-                        if (endDateInputRef.current) {
-                          endDateInputRef.current.showPicker();
-                        }
-                      }}
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        cursor: "pointer",
-                        padding: "4px",
-                        borderRadius: "4px",
-                        "&:hover": {
-                          backgroundColor: "rgba(25, 118, 210, 0.08)",
-                        },
-                      }}
-                    >
-                      <CalendarIcon
-                        sx={{
-                          color: "#1976d2",
-                          fontSize: "20px",
-                        }}
-                      />
-                    </Box>
-                  ),
-                }}
-              />
+            <Grid item xs={12} sm={6}>
+              <LocalizationProvider
+                dateAdapter={AdapterDateFns}
+                adapterLocale={localeMap[language] || enUS}
+              >
+                <DatePicker
+                  label={t("advancedScheduling.endDate")}
+                  value={formData.end_date ? new Date(formData.end_date) : null}
+                  onChange={(newValue) =>
+                    setFormData({
+                      ...formData,
+                      end_date: newValue
+                        ? newValue.toISOString().split("T")[0]
+                        : "",
+                    })
+                  }
+                  format={
+                    language === "fr" || language === "es"
+                      ? "dd/MM/yyyy"
+                      : "MM/dd/yyyy"
+                  }
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      placeholder: t("dateTime.dateFormat"),
+                      inputRef: endDateInputRef,
+                    },
+                  }}
+                />
+              </LocalizationProvider>
             </Grid>
           </Grid>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
-          <Button onClick={handleSubmit} variant="contained" disabled={loading}>
-            {loading ? "Creating..." : "Create Pattern"}
+          <Button onClick={() => setOpenDialog(false)}>
+            {t("common.cancel")}
+          </Button>
+          <Button onClick={handleSubmit} variant="contained">
+            {t("common.create")}
           </Button>
         </DialogActions>
       </Dialog>

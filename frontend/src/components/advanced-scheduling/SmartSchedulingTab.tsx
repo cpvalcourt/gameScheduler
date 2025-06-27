@@ -27,7 +27,16 @@ import {
   LocationOn as LocationIcon,
   Star as StarIcon,
   CalendarToday as CalendarIcon,
+  Close as CloseIcon,
+  Warning as WarningIcon,
 } from "@mui/icons-material";
+import { useI18n } from "../../contexts/I18nContext";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { fr } from "date-fns/locale/fr";
+import { es } from "date-fns/locale/es";
+import { enUS } from "date-fns/locale/en-US";
 
 interface SmartSchedulingTabProps {
   onError: (error: string) => void;
@@ -47,10 +56,17 @@ interface OptimalTimeSlot {
   weather_forecast?: string;
 }
 
+const localeMap = {
+  en: enUS,
+  fr: fr,
+  es: es,
+};
+
 const SmartSchedulingTab = ({
   onError,
   onLoading,
 }: SmartSchedulingTabProps) => {
+  const { t, language } = useI18n();
   const [teams, setTeams] = useState<any[]>([]);
   const [selectedTeam, setSelectedTeam] = useState<number | "">("");
   const [searchDate, setSearchDate] = useState("");
@@ -88,7 +104,7 @@ const SmartSchedulingTab = ({
         setSelectedTeam(mockTeams[0].id);
       }
     } catch (error) {
-      onError("Failed to load teams");
+      onError(t("advancedScheduling.failedToLoadTeams"));
       console.error("Error loading teams:", error);
     } finally {
       setLoading(false);
@@ -98,7 +114,7 @@ const SmartSchedulingTab = ({
 
   const handleFindOptimalTime = async () => {
     if (!selectedTeam || !searchDate) {
-      onError("Please select a team and date");
+      onError(t("advancedScheduling.pleaseSelectTeamAndDate"));
       return;
     }
 
@@ -157,9 +173,9 @@ const SmartSchedulingTab = ({
       ];
 
       setOptimalSlots(mockSlots);
-      onError("Optimal time slots found! (Demo mode)");
+      onError(t("advancedScheduling.optimalTimeSlotsFound"));
     } catch (error) {
-      onError("Failed to find optimal time slots");
+      onError(t("advancedScheduling.failedToFindOptimalTime"));
       console.error("Error finding optimal time:", error);
     } finally {
       setSearching(false);
@@ -174,10 +190,10 @@ const SmartSchedulingTab = ({
   };
 
   const getAvailabilityLabel = (score: number) => {
-    if (score >= 90) return "Excellent";
-    if (score >= 75) return "Good";
-    if (score >= 60) return "Fair";
-    return "Poor";
+    if (score >= 90) return t("advancedScheduling.excellent");
+    if (score >= 75) return t("advancedScheduling.good");
+    if (score >= 60) return t("advancedScheduling.fair");
+    return t("advancedScheduling.poor");
   };
 
   if (loading) {
@@ -197,7 +213,7 @@ const SmartSchedulingTab = ({
         mb={3}
       >
         <Typography variant="h5" component="h2">
-          Smart Scheduling
+          {t("advancedScheduling.smartScheduling")}
         </Typography>
         <Button
           variant="contained"
@@ -205,7 +221,9 @@ const SmartSchedulingTab = ({
           onClick={handleFindOptimalTime}
           disabled={!selectedTeam || !searchDate || searching}
         >
-          {searching ? "Finding Optimal Times..." : "Find Optimal Time"}
+          {searching
+            ? t("advancedScheduling.findingOptimalTimes")
+            : t("advancedScheduling.findOptimalTime")}
         </Button>
       </Box>
 
@@ -215,17 +233,17 @@ const SmartSchedulingTab = ({
           <Card>
             <CardContent>
               <Typography variant="h6" component="h2" gutterBottom>
-                Search Criteria
+                {t("advancedScheduling.searchCriteria")}
               </Typography>
               <Box display="flex" flexDirection="column" gap={2}>
                 <FormControl fullWidth>
-                  <InputLabel>Select Team</InputLabel>
+                  <InputLabel>{t("advancedScheduling.selectTeam")}</InputLabel>
                   <Select
                     value={selectedTeam}
-                    label="Select Team"
+                    label={t("advancedScheduling.selectTeam")}
                     onChange={(e) => setSelectedTeam(e.target.value as number)}
                     inputProps={{
-                      "aria-label": "Select team for smart scheduling",
+                      "aria-label": t("advancedScheduling.selectTeam"),
                     }}
                   >
                     {teams.map((team) => (
@@ -236,73 +254,70 @@ const SmartSchedulingTab = ({
                   </Select>
                 </FormControl>
 
-                <TextField
-                  fullWidth
-                  label="Search Date"
-                  type="date"
-                  value={searchDate}
-                  onChange={(e) => setSearchDate(e.target.value)}
-                  inputRef={dateInputRef}
-                  InputLabelProps={{
-                    shrink: true,
-                    sx: { color: "text.primary" },
-                  }}
-                  InputProps={{
-                    endAdornment: (
-                      <Box
-                        onClick={() => {
-                          if (dateInputRef.current) {
-                            dateInputRef.current.showPicker();
-                          }
-                        }}
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          cursor: "pointer",
-                          padding: "4px",
-                          borderRadius: "4px",
-                          "&:hover": {
-                            backgroundColor: "rgba(25, 118, 210, 0.08)",
+                <LocalizationProvider
+                  dateAdapter={AdapterDateFns}
+                  adapterLocale={localeMap[language] || enUS}
+                >
+                  <DatePicker
+                    label={t("advancedScheduling.searchDate")}
+                    value={searchDate ? new Date(searchDate) : null}
+                    onChange={(newValue) =>
+                      setSearchDate(
+                        newValue ? newValue.toISOString().split("T")[0] : ""
+                      )
+                    }
+                    format={
+                      language === "fr" || language === "es"
+                        ? "dd/MM/yyyy"
+                        : "MM/dd/yyyy"
+                    }
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        placeholder: t("dateTime.dateFormat"),
+                        inputRef: dateInputRef,
+                        sx: {
+                          "& .MuiInputBase-input": {
+                            color: "text.primary",
                           },
-                        }}
-                      >
-                        <CalendarIcon
-                          sx={{
-                            color: "#1976d2",
-                            fontSize: "20px",
-                          }}
-                        />
-                      </Box>
-                    ),
-                  }}
-                  sx={{
-                    "& .MuiInputBase-input": {
-                      color: "text.primary",
-                    },
-                    "& .MuiInputLabel-root.Mui-focused": {
-                      color: "primary.main",
-                    },
-                  }}
-                />
+                          "& .MuiInputLabel-root.Mui-focused": {
+                            color: "primary.main",
+                          },
+                        },
+                      },
+                    }}
+                  />
+                </LocalizationProvider>
 
                 <FormControl fullWidth>
-                  <InputLabel>Game Duration</InputLabel>
+                  <InputLabel>
+                    {t("advancedScheduling.gameDuration")}
+                  </InputLabel>
                   <Select
                     value={searchDuration}
-                    label="Game Duration"
+                    label={t("advancedScheduling.gameDuration")}
                     onChange={(e) =>
                       setSearchDuration(e.target.value as number)
                     }
                     inputProps={{
-                      "aria-label": "Select game duration",
+                      "aria-label": t("advancedScheduling.gameDuration"),
                     }}
                   >
-                    <MenuItem value={60}>1 hour</MenuItem>
-                    <MenuItem value={90}>1.5 hours</MenuItem>
-                    <MenuItem value={120}>2 hours</MenuItem>
-                    <MenuItem value={150}>2.5 hours</MenuItem>
-                    <MenuItem value={180}>3 hours</MenuItem>
+                    <MenuItem value={60}>
+                      {t("advancedScheduling.oneHour")}
+                    </MenuItem>
+                    <MenuItem value={90}>
+                      {t("advancedScheduling.oneAndHalfHours")}
+                    </MenuItem>
+                    <MenuItem value={120}>
+                      {t("advancedScheduling.twoHours")}
+                    </MenuItem>
+                    <MenuItem value={150}>
+                      {t("advancedScheduling.twoAndHalfHours")}
+                    </MenuItem>
+                    <MenuItem value={180}>
+                      {t("advancedScheduling.threeHours")}
+                    </MenuItem>
                   </Select>
                 </FormControl>
 
@@ -313,7 +328,9 @@ const SmartSchedulingTab = ({
                   disabled={!selectedTeam || !searchDate || searching}
                   fullWidth
                 >
-                  {searching ? "Searching..." : "Find Optimal Times"}
+                  {searching
+                    ? t("advancedScheduling.searching")
+                    : t("advancedScheduling.findOptimalTimes")}
                 </Button>
               </Box>
             </CardContent>
@@ -326,18 +343,17 @@ const SmartSchedulingTab = ({
             <Card>
               <CardContent>
                 <Typography variant="h6" component="h2" gutterBottom>
-                  Optimal Time Slots
+                  {t("advancedScheduling.optimalTimeSlots")}
                 </Typography>
                 <Alert severity="info">
-                  Select a team and date, then click "Find Optimal Time" to
-                  discover the best scheduling options.
+                  {t("advancedScheduling.selectTeamAndDate")}
                 </Alert>
               </CardContent>
             </Card>
           ) : (
             <Box>
               <Typography variant="h6" component="h2" gutterBottom>
-                Optimal Time Slots Found
+                {t("advancedScheduling.optimalTimeSlotsFound")}
               </Typography>
               <Grid container spacing={2}>
                 {optimalSlots.map((slot) => (
@@ -353,89 +369,79 @@ const SmartSchedulingTab = ({
                           <Box>
                             <Typography
                               variant="h6"
-                              component="h2"
+                              component="h3"
                               gutterBottom
                             >
                               {slot.start_time} - {slot.end_time}
                             </Typography>
-                            <Typography
-                              variant="body2"
-                              color="text.secondary"
-                              gutterBottom
-                            >
-                              {new Date(slot.date).toLocaleDateString()}
-                            </Typography>
-                          </Box>
-                          <Chip
-                            label={`${
-                              slot.availability_score
-                            }% - ${getAvailabilityLabel(
-                              slot.availability_score
-                            )}`}
-                            color={
-                              getAvailabilityColor(
-                                slot.availability_score
-                              ) as any
-                            }
-                            icon={<StarIcon />}
-                          />
-                        </Box>
-
-                        <Box display="flex" gap={2} mb={2}>
-                          <Box display="flex" alignItems="center" gap={1}>
-                            <LocationIcon
-                              sx={{ color: "#1976d2" }}
-                              fontSize="small"
-                            />
-                            <Typography variant="body2">
+                            <Typography variant="body2" color="text.secondary">
                               {slot.location}
                             </Typography>
                           </Box>
-                          <Box display="flex" alignItems="center" gap={1}>
-                            <GroupIcon
-                              sx={{ color: "#1976d2" }}
-                              fontSize="small"
-                            />
-                            <Typography variant="body2">
-                              {slot.available_players}/{slot.total_players}{" "}
-                              players available
-                            </Typography>
-                          </Box>
+                          <Chip
+                            label={getAvailabilityLabel(
+                              slot.availability_score
+                            )}
+                            color={getAvailabilityColor(
+                              slot.availability_score
+                            )}
+                            size="small"
+                          />
                         </Box>
 
-                        {slot.weather_forecast && (
-                          <Box
-                            display="flex"
-                            alignItems="center"
-                            gap={1}
-                            mb={2}
-                          >
-                            <ScheduleIcon
-                              sx={{ color: "#1976d2" }}
-                              fontSize="small"
-                            />
-                            <Typography variant="body2">
-                              Weather: {slot.weather_forecast}
-                            </Typography>
-                          </Box>
-                        )}
+                        <Grid container spacing={2}>
+                          <Grid item xs={12} sm={6}>
+                            <Box
+                              display="flex"
+                              alignItems="center"
+                              gap={1}
+                              mb={1}
+                            >
+                              <GroupIcon fontSize="small" color="action" />
+                              <Typography variant="body2">
+                                {t("advancedScheduling.availablePlayers")}:{" "}
+                                {slot.available_players}/{slot.total_players}
+                              </Typography>
+                            </Box>
+                            <Box
+                              display="flex"
+                              alignItems="center"
+                              gap={1}
+                              mb={1}
+                            >
+                              <StarIcon fontSize="small" color="action" />
+                              <Typography variant="body2">
+                                {t("advancedScheduling.availabilityScore")}:{" "}
+                                {slot.availability_score}%
+                              </Typography>
+                            </Box>
+                          </Grid>
+                          <Grid item xs={12} sm={6}>
+                            <Box
+                              display="flex"
+                              alignItems="center"
+                              gap={1}
+                              mb={1}
+                            >
+                              <LocationIcon fontSize="small" color="action" />
+                              <Typography variant="body2">
+                                {t("advancedScheduling.weatherForecast")}:{" "}
+                                {slot.weather_forecast}
+                              </Typography>
+                            </Box>
+                          </Grid>
+                        </Grid>
 
                         {slot.conflicts.length > 0 && (
-                          <Box>
-                            <Typography
-                              variant="body2"
-                              color="text.secondary"
-                              gutterBottom
-                            >
-                              Conflicts:
+                          <Box mt={2}>
+                            <Typography variant="subtitle2" gutterBottom>
+                              {t("advancedScheduling.conflicts")}:
                             </Typography>
                             <List dense>
                               {slot.conflicts.map((conflict, index) => (
                                 <ListItem key={index} sx={{ py: 0 }}>
-                                  <ListItemIcon sx={{ minWidth: 24 }}>
-                                    <Typography variant="body2" color="error">
-                                      •
-                                    </Typography>
+                                  <ListItemIcon sx={{ minWidth: 32 }}>
+                                    <CloseIcon fontSize="small" color="error" />
                                   </ListItemIcon>
                                   <ListItemText
                                     primary={conflict}
@@ -448,19 +454,6 @@ const SmartSchedulingTab = ({
                             </List>
                           </Box>
                         )}
-
-                        <Box display="flex" gap={2} mt={2}>
-                          <Button
-                            variant="contained"
-                            color="primary"
-                            size="small"
-                          >
-                            Schedule Game
-                          </Button>
-                          <Button variant="outlined" size="small">
-                            View Details
-                          </Button>
-                        </Box>
                       </CardContent>
                     </Card>
                   </Grid>

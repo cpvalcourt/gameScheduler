@@ -27,6 +27,8 @@ import {
 import { useAuth } from "../contexts/AuthContext";
 import { useI18n } from "../contexts/I18nContext";
 import { useNavigate } from "react-router-dom";
+import LanguageSelector from "./LanguageSelector";
+import { getAvatarInitial } from "../utils/avatarUtils";
 
 interface NavigationHeaderProps {
   title: string;
@@ -41,8 +43,8 @@ const NavigationHeader = ({
   showBackButton = false,
   children,
 }: NavigationHeaderProps) => {
-  const { user, logout } = useAuth();
-  const { t, language, setLanguage } = useI18n();
+  const { user, loading, logout } = useAuth();
+  const { t } = useI18n();
   const navigate = useNavigate();
   const [userMenuAnchor, setUserMenuAnchor] = useState(null);
 
@@ -63,10 +65,6 @@ const NavigationHeader = ({
 
   const handleUserMenuClose = () => {
     setUserMenuAnchor(null);
-  };
-
-  const handleLanguageChange = (event: any) => {
-    setLanguage(event.target.value);
   };
 
   return (
@@ -282,59 +280,7 @@ const NavigationHeader = ({
         </Box>
 
         {/* Language Switcher */}
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 1,
-          }}
-          role="group"
-          aria-label="Language selection"
-        >
-          <LanguageIcon
-            color="action"
-            sx={{ fontSize: 20 }}
-            aria-hidden="true"
-          />
-          <FormControl size="small" sx={{ minWidth: 100 }}>
-            <InputLabel
-              id="language-select-label"
-              sx={{ fontSize: "0.875rem" }}
-            >
-              {t("navigation.language")}
-            </InputLabel>
-            <Select
-              labelId="language-select-label"
-              value={language}
-              onChange={handleLanguageChange}
-              displayEmpty
-              aria-label={t("navigation.selectLanguage")}
-              sx={{
-                height: 36,
-                "& .MuiSelect-select": {
-                  py: 0.5,
-                  display: "flex",
-                  alignItems: "center",
-                },
-                "&:focus": {
-                  outline: "2px solid",
-                  outlineColor: "primary.main",
-                  outlineOffset: "2px",
-                },
-              }}
-            >
-              <MenuItem value="en" aria-label="English">
-                English
-              </MenuItem>
-              <MenuItem value="es" aria-label="Español">
-                Español
-              </MenuItem>
-              <MenuItem value="fr" aria-label="Français">
-                Français
-              </MenuItem>
-            </Select>
-          </FormControl>
-        </Box>
+        <LanguageSelector variant="icon" size="small" />
 
         {/* User Menu */}
         <Box
@@ -372,7 +318,31 @@ const NavigationHeader = ({
               }
             }}
           >
-            {user?.username?.charAt(0).toUpperCase() || "U"}
+            {(() => {
+              // Debug logging
+              console.log("NavigationHeader render - User:", user);
+              console.log("NavigationHeader render - Email:", user?.email);
+              console.log(
+                "NavigationHeader render - Username:",
+                user?.username
+              );
+              console.log("NavigationHeader render - Loading:", loading);
+
+              if (loading) {
+                console.log(
+                  "NavigationHeader render - Still loading, showing U"
+                );
+                return "U";
+              }
+
+              const initial = getAvatarInitial(user);
+              console.log(
+                "NavigationHeader render - Calculated initial:",
+                initial
+              );
+
+              return initial;
+            })()}
           </Avatar>
 
           <Menu

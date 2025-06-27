@@ -1,10 +1,4 @@
-import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  type ReactNode,
-} from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 import enTranslations from "../locales/en.json";
 import esTranslations from "../locales/es.json";
 import frTranslations from "../locales/fr.json";
@@ -23,9 +17,9 @@ interface I18nContextType {
   t: (key: string, params?: Record<string, string | number>) => string;
 }
 
-const I18nContext = createContext<I18nContextType | undefined>(undefined);
+const I18nContext = createContext(undefined);
 
-export const I18nProvider = ({ children }: { children: ReactNode }) => {
+export const I18nProvider = ({ children }: { children: any }) => {
   const [language, setLanguageState] = useState("en" as Language);
 
   useEffect(() => {

@@ -26,6 +26,8 @@ import {
   TrendingUp as TrendingUpIcon,
   CalendarToday as CalendarIcon,
 } from "@mui/icons-material";
+import { useI18n } from "../../contexts/I18nContext";
+import { formatDate, formatTime } from "../../utils/dateUtils";
 
 interface TeamAvailabilityTabProps {
   onError: (error: string) => void;
@@ -57,6 +59,7 @@ const TeamAvailabilityTab = ({
   onError,
   onLoading,
 }: TeamAvailabilityTabProps) => {
+  const { t, language } = useI18n();
   const [teams, setTeams] = useState<TeamAvailability[]>([]);
   const [selectedTeam, setSelectedTeam] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
@@ -146,7 +149,7 @@ const TeamAvailabilityTab = ({
         setSelectedTeam(mockTeams[0].id);
       }
     } catch (error) {
-      onError("Failed to load team availability");
+      onError(t("advancedScheduling.failedToLoadTeamAvailability"));
       console.error("Error loading team availability:", error);
     } finally {
       setLoading(false);
@@ -161,10 +164,10 @@ const TeamAvailabilityTab = ({
   };
 
   const getAvailabilityLabel = (percentage: number) => {
-    if (percentage >= 90) return "Excellent";
-    if (percentage >= 75) return "Good";
-    if (percentage >= 60) return "Fair";
-    return "Poor";
+    if (percentage >= 90) return t("advancedScheduling.excellent");
+    if (percentage >= 75) return t("advancedScheduling.good");
+    if (percentage >= 60) return t("advancedScheduling.fair");
+    return t("advancedScheduling.poor");
   };
 
   const selectedTeamData = teams.find((team) => team.id === selectedTeam);
@@ -186,23 +189,21 @@ const TeamAvailabilityTab = ({
         mb={3}
       >
         <Typography variant="h5" component="h2">
-          Team Availability
+          {t("advancedScheduling.teamAvailability")}
         </Typography>
         <Button
           variant="contained"
           startIcon={<CalendarIcon />}
           onClick={() =>
-            onError("Team availability management coming soon! (Demo mode)")
+            onError(t("advancedScheduling.teamAvailabilityManagement"))
           }
         >
-          Manage Team Schedule
+          {t("advancedScheduling.manageTeamSchedule")}
         </Button>
       </Box>
 
       {teams.length === 0 ? (
-        <Alert severity="info">
-          No teams found. Please create teams first to view availability.
-        </Alert>
+        <Alert severity="info">{t("advancedScheduling.noTeamsFound")}</Alert>
       ) : (
         <Grid container spacing={3}>
           {/* Team Selection */}
@@ -210,7 +211,7 @@ const TeamAvailabilityTab = ({
             <Card>
               <CardContent>
                 <Typography variant="h6" component="h2" gutterBottom>
-                  Select Team
+                  {t("advancedScheduling.selectTeam")}
                 </Typography>
                 <Box display="flex" gap={2} flexWrap="wrap">
                   {teams.map((team) => (
@@ -237,12 +238,12 @@ const TeamAvailabilityTab = ({
                 <Card>
                   <CardContent>
                     <Typography variant="h6" component="h2" gutterBottom>
-                      Team Overview
+                      {t("advancedScheduling.teamOverview")}
                     </Typography>
                     <Box display="flex" flexDirection="column" gap={2}>
                       <Box>
                         <Typography variant="body2" color="text.secondary">
-                          Total Members
+                          {t("advancedScheduling.totalMembers")}
                         </Typography>
                         <Typography variant="h4">
                           {selectedTeamData.total_members}
@@ -250,7 +251,7 @@ const TeamAvailabilityTab = ({
                       </Box>
                       <Box>
                         <Typography variant="body2" color="text.secondary">
-                          Active Members
+                          {t("advancedScheduling.activeMembers")}
                         </Typography>
                         <Typography variant="h4" color="primary">
                           {selectedTeamData.active_members}
@@ -258,7 +259,7 @@ const TeamAvailabilityTab = ({
                       </Box>
                       <Box>
                         <Typography variant="body2" color="text.secondary">
-                          Average Availability
+                          {t("advancedScheduling.averageAvailability")}
                         </Typography>
                         <Box display="flex" alignItems="center" gap={1}>
                           <Typography variant="h4">
@@ -268,22 +269,18 @@ const TeamAvailabilityTab = ({
                             label={getAvailabilityLabel(
                               selectedTeamData.average_availability
                             )}
-                            color={
-                              getAvailabilityColor(
-                                selectedTeamData.average_availability
-                              ) as any
-                            }
+                            color={getAvailabilityColor(
+                              selectedTeamData.average_availability
+                            )}
                             size="small"
                           />
                         </Box>
                         <LinearProgress
                           variant="determinate"
                           value={selectedTeamData.average_availability}
-                          color={
-                            getAvailabilityColor(
-                              selectedTeamData.average_availability
-                            ) as any
-                          }
+                          color={getAvailabilityColor(
+                            selectedTeamData.average_availability
+                          )}
                           sx={{ mt: 1 }}
                         />
                       </Box>
@@ -296,20 +293,16 @@ const TeamAvailabilityTab = ({
                 <Card>
                   <CardContent>
                     <Typography variant="h6" component="h2" gutterBottom>
-                      Next Game
+                      {t("advancedScheduling.nextGame")}
                     </Typography>
                     <Box display="flex" alignItems="center" gap={2}>
                       <ScheduleIcon color="primary" />
                       <Box>
                         <Typography variant="body1">
-                          {new Date(
-                            selectedTeamData.next_game
-                          ).toLocaleDateString()}
+                          {formatDate(selectedTeamData.next_game, language)}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                          {new Date(
-                            selectedTeamData.next_game
-                          ).toLocaleTimeString()}
+                          {formatTime(selectedTeamData.next_game, language)}
                         </Typography>
                       </Box>
                     </Box>
@@ -322,18 +315,30 @@ const TeamAvailabilityTab = ({
                 <Card>
                   <CardContent>
                     <Typography variant="h6" component="h2" gutterBottom>
-                      Member Availability
+                      {t("advancedScheduling.memberAvailability")}
                     </Typography>
                     <TableContainer component={Paper}>
                       <Table>
                         <TableHead>
                           <TableRow>
-                            <TableCell>Member</TableCell>
-                            <TableCell>Availability</TableCell>
-                            <TableCell>Last Updated</TableCell>
-                            <TableCell>Upcoming Games</TableCell>
-                            <TableCell>Missed Games</TableCell>
-                            <TableCell>Actions</TableCell>
+                            <TableCell>
+                              {t("advancedScheduling.member")}
+                            </TableCell>
+                            <TableCell>
+                              {t("advancedScheduling.availability")}
+                            </TableCell>
+                            <TableCell>
+                              {t("advancedScheduling.lastUpdated")}
+                            </TableCell>
+                            <TableCell>
+                              {t("advancedScheduling.upcomingGames")}
+                            </TableCell>
+                            <TableCell>
+                              {t("advancedScheduling.missedGames")}
+                            </TableCell>
+                            <TableCell>
+                              {t("advancedScheduling.actions")}
+                            </TableCell>
                           </TableRow>
                         </TableHead>
                         <TableBody>
@@ -369,47 +374,45 @@ const TeamAvailabilityTab = ({
                                     label={getAvailabilityLabel(
                                       member.availability_percentage
                                     )}
-                                    color={
-                                      getAvailabilityColor(
-                                        member.availability_percentage
-                                      ) as any
-                                    }
+                                    color={getAvailabilityColor(
+                                      member.availability_percentage
+                                    )}
                                     size="small"
                                   />
                                 </Box>
+                                <LinearProgress
+                                  variant="determinate"
+                                  value={member.availability_percentage}
+                                  color={getAvailabilityColor(
+                                    member.availability_percentage
+                                  )}
+                                  sx={{ mt: 1 }}
+                                />
                               </TableCell>
                               <TableCell>
                                 <Typography variant="body2">
-                                  {new Date(
-                                    member.last_updated
-                                  ).toLocaleDateString()}
+                                  {formatDate(member.last_updated, language)}
                                 </Typography>
                                 <Typography
                                   variant="caption"
                                   color="text.secondary"
                                 >
-                                  {new Date(
-                                    member.last_updated
-                                  ).toLocaleTimeString()}
+                                  {formatTime(member.last_updated, language)}
                                 </Typography>
                               </TableCell>
                               <TableCell>
-                                <Chip
-                                  label={member.upcoming_games}
-                                  color="primary"
-                                  size="small"
-                                />
+                                <Typography variant="body2">
+                                  {member.upcoming_games}
+                                </Typography>
                               </TableCell>
                               <TableCell>
-                                <Chip
-                                  label={member.missed_games}
-                                  color="error"
-                                  size="small"
-                                />
+                                <Typography variant="body2" color="error">
+                                  {member.missed_games}
+                                </Typography>
                               </TableCell>
                               <TableCell>
-                                <Button size="small" color="primary">
-                                  View Details
+                                <Button size="small" variant="outlined">
+                                  {t("common.view")}
                                 </Button>
                               </TableCell>
                             </TableRow>

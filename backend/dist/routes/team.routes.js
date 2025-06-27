@@ -55,6 +55,7 @@ const updateMemberRoleValidation = [
 router.post('/', createTeamValidation, validate_request_1.validateRequest, team_controller_1.TeamController.createTeam);
 router.get('/', team_controller_1.TeamController.getUserTeams);
 router.get('/:id', (0, express_validator_1.param)('id').isInt().withMessage('Invalid team ID'), validate_request_1.validateRequest, team_controller_1.TeamController.getTeam);
+router.get('/:id/stats', (0, express_validator_1.param)('id').isInt().withMessage('Invalid team ID'), validate_request_1.validateRequest, team_controller_1.TeamController.getTeamStats);
 router.put('/:id', updateTeamValidation, validate_request_1.validateRequest, team_controller_1.TeamController.updateTeam);
 router.delete('/:id', (0, express_validator_1.param)('id').isInt().withMessage('Invalid team ID'), validate_request_1.validateRequest, team_controller_1.TeamController.deleteTeam);
 router.post('/:id/members', addMemberValidation, validate_request_1.validateRequest, team_controller_1.TeamController.addMember);

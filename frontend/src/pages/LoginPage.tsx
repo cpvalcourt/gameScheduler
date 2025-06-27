@@ -11,10 +11,11 @@ import {
   Link,
   CircularProgress,
 } from "@mui/material";
-import { login as loginApi } from "../api/auth";
 import api from "../api/axios";
 import { Link as RouterLink } from "react-router-dom";
 import { useI18n } from "../contexts/I18nContext";
+import { useAuth } from "../contexts/AuthContext";
+import LanguageSelector from "../components/LanguageSelector";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
@@ -26,6 +27,7 @@ const LoginPage = () => {
   const [passwordError, setPasswordError] = useState("");
   const navigate = useNavigate();
   const { t } = useI18n();
+  const { login } = useAuth();
 
   // Refs for focus management
   const emailRef = useRef(null);
@@ -88,14 +90,21 @@ const LoginPage = () => {
 
     setLoading(true);
     try {
-      const res = await loginApi(email, password);
-      if (!res.user.is_verified) {
-        setError(t("auth.emailNotVerified"));
-        setShowResendVerification(true);
-        return;
+      // Use AuthContext login function which properly handles user state
+      await login(email, password);
+
+      // Check if user is verified (this should be handled by the backend)
+      const userData = localStorage.getItem("user");
+      if (userData) {
+        const user = JSON.parse(userData);
+        if (!user.is_verified) {
+          setError(t("auth.emailNotVerified"));
+          setShowResendVerification(true);
+          return;
+        }
       }
-      localStorage.setItem("token", res.token);
-      localStorage.setItem("user", JSON.stringify(res.user));
+
+      // Navigate to dashboard after successful login
       navigate("/");
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || t("auth.loginFailed");
@@ -136,6 +145,18 @@ const LoginPage = () => {
 
   return (
     <Container component="main" maxWidth="xs">
+      {/* Language Selector - Top Right */}
+      <Box
+        sx={{
+          position: "absolute",
+          top: 16,
+          right: 16,
+          zIndex: 1,
+        }}
+      >
+        <LanguageSelector variant="menu" size="small" />
+      </Box>
+
       {/* Skip to main content link */}
       <a
         href="#login-form"

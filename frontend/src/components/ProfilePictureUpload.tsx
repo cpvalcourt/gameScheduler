@@ -27,7 +27,9 @@ import {
 import ReactCrop, { type Crop } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
 import { useI18n } from "../contexts/I18nContext";
+import { useAuth } from "../contexts/AuthContext";
 import api from "../services/api";
+import { getAvatarInitial } from "../utils/avatarUtils";
 
 interface ProfilePictureUploadProps {
   currentImageUrl?: string;
@@ -41,6 +43,7 @@ const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
   size = 120,
 }) => {
   const { t } = useI18n();
+  const { user, loading } = useAuth();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [crop, setCrop] = useState<Crop>({
     unit: "%",
@@ -204,7 +207,9 @@ const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
             border: "3px solid #fff",
             boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
           }}
-        />
+        >
+          {!currentImageUrl && (loading ? "U" : getAvatarInitial(user))}
+        </Avatar>
         <IconButton
           onClick={handleCameraClick}
           sx={{

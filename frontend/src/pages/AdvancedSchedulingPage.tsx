@@ -10,6 +10,7 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { useAuth } from "../contexts/AuthContext";
+import { useI18n } from "../contexts/I18nContext";
 import NavigationHeader from "../components/NavigationHeader";
 import RecurringPatternsTab from "../components/advanced-scheduling/RecurringPatternsTab";
 import PlayerAvailabilityTab from "../components/advanced-scheduling/PlayerAvailabilityTab";
@@ -47,6 +48,7 @@ function a11yProps(index: number) {
 
 const AdvancedSchedulingPage = () => {
   const { user } = useAuth();
+  const { t } = useI18n();
   const [tabValue, setTabValue] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -58,9 +60,7 @@ const AdvancedSchedulingPage = () => {
   if (!user) {
     return (
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-        <Alert severity="error">
-          Please log in to access Advanced Scheduling.
-        </Alert>
+        <Alert severity="error">{t("advancedScheduling.loginRequired")}</Alert>
       </Container>
     );
   }
@@ -68,8 +68,8 @@ const AdvancedSchedulingPage = () => {
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <NavigationHeader
-        title="Advanced Game Scheduling"
-        subtitle="Manage recurring game patterns, player availability, and smart scheduling features."
+        title={t("advancedScheduling.title")}
+        subtitle={t("advancedScheduling.subtitle")}
       />
 
       {error && (
@@ -87,10 +87,22 @@ const AdvancedSchedulingPage = () => {
             variant="scrollable"
             scrollButtons="auto"
           >
-            <Tab label="Recurring Patterns" {...a11yProps(0)} />
-            <Tab label="Player Availability" {...a11yProps(1)} />
-            <Tab label="Smart Scheduling" {...a11yProps(2)} />
-            <Tab label="Team Availability" {...a11yProps(3)} />
+            <Tab
+              label={t("advancedScheduling.recurringPatterns")}
+              {...a11yProps(0)}
+            />
+            <Tab
+              label={t("advancedScheduling.playerAvailability")}
+              {...a11yProps(1)}
+            />
+            <Tab
+              label={t("advancedScheduling.smartScheduling")}
+              {...a11yProps(2)}
+            />
+            <Tab
+              label={t("advancedScheduling.teamAvailability")}
+              {...a11yProps(3)}
+            />
           </Tabs>
         </Box>
 

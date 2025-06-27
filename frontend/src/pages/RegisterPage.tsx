@@ -14,6 +14,8 @@ import {
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { register as registerApi } from "../api/auth";
+import { useI18n } from "../contexts/I18nContext";
+import LanguageSelector from "../components/LanguageSelector";
 
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
@@ -28,6 +30,7 @@ const RegisterPage = () => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(null);
   const navigate = useNavigate();
+  const { t } = useI18n();
 
   const validateForm = () => {
     const newErrors = {};
@@ -113,6 +116,18 @@ const RegisterPage = () => {
 
   return (
     <Container component="main" maxWidth="sm">
+      {/* Language Selector - Top Right */}
+      <Box
+        sx={{
+          position: "absolute",
+          top: 16,
+          right: 16,
+          zIndex: 1,
+        }}
+      >
+        <LanguageSelector variant="menu" size="small" />
+      </Box>
+
       <Box
         sx={{
           marginTop: 8,
@@ -122,10 +137,10 @@ const RegisterPage = () => {
         }}
       >
         <Typography component="h1" variant="h4" gutterBottom>
-          Create Account
+          {t("auth.createAccount")}
         </Typography>
         <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-          Join Game Scheduler to start organizing and participating in games
+          {t("auth.joinGameScheduler")}
         </Typography>
 
         {success && (

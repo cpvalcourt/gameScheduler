@@ -16,6 +16,8 @@ const game_routes_1 = __importDefault(require("./routes/game.routes"));
 const user_routes_1 = __importDefault(require("./routes/user.routes"));
 const dashboard_routes_1 = __importDefault(require("./routes/dashboard.routes"));
 const admin_routes_1 = __importDefault(require("./routes/admin.routes"));
+const advanced_scheduling_routes_1 = __importDefault(require("./routes/advanced-scheduling.routes"));
+const team_invitations_routes_1 = __importDefault(require("./routes/team-invitations.routes"));
 const env_1 = __importDefault(require("./config/env"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
@@ -41,18 +43,20 @@ app.use('/uploads', (req, res, next) => {
     res.header('Access-Control-Allow-Credentials', 'true');
     next();
 }, express_1.default.static(path_1.default.join(__dirname, '../uploads')));
+// Health check endpoint (must be before game routes)
+app.get('/api/health', (req, res) => {
+    res.json({ status: 'OK', timestamp: new Date().toISOString() });
+});
 // Routes
 app.use('/api/auth', auth_routes_1.default);
 app.use('/api/teams', team_routes_1.default);
+app.use('/api/team-invitations', team_invitations_routes_1.default);
 app.use('/api/game-series', game_series_routes_1.default);
 app.use('/api', game_routes_1.default);
 app.use('/api/users', user_routes_1.default);
 app.use('/api/dashboard', dashboard_routes_1.default);
 app.use('/api/admin', admin_routes_1.default);
-// Health check endpoint
-app.get('/api/health', (req, res) => {
-    res.json({ status: 'OK', timestamp: new Date().toISOString() });
-});
+app.use('/api/advanced-scheduling', advanced_scheduling_routes_1.default);
 // Basic route for testing
 app.get('/', (req, res) => {
     res.json({ message: 'Game Scheduler API is running' });

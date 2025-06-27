@@ -41,6 +41,7 @@ import {
   Email as EmailIcon,
 } from "@mui/icons-material";
 import { useAuth } from "../contexts/AuthContext";
+import { useI18n } from "../contexts/I18nContext";
 import {
   getTeam,
   updateTeam,
@@ -61,11 +62,13 @@ import type {
 import NavigationHeader from "../components/NavigationHeader";
 import TeamInvitationForm from "../components/TeamInvitationForm";
 import TeamInvitationsList from "../components/TeamInvitationsList";
+import { formatDate } from "../utils/dateUtils";
 
 const TeamDetailsPage = () => {
   const { teamId } = useParams<{ teamId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t, language } = useI18n();
 
   const [team, setTeam] = useState<TeamWithMembers | null>(null);
   const [loading, setLoading] = useState(true);
@@ -310,14 +313,14 @@ const TeamDetailsPage = () => {
                 </Typography>
                 <Typography variant="body2" color="text.secondary" gutterBottom>
                   <strong>Created:</strong>{" "}
-                  {new Date(team.created_at).toLocaleDateString()}
+                  {formatDate(team.created_at, language)}
                 </Typography>
                 <Typography variant="body2" color="text.secondary" gutterBottom>
                   <strong>Members:</strong> {team.members.length}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                   <strong>Last Updated:</strong>{" "}
-                  {new Date(team.updated_at).toLocaleDateString()}
+                  {formatDate(team.updated_at, language)}
                 </Typography>
               </CardContent>
             </Card>
@@ -380,9 +383,10 @@ const TeamDetailsPage = () => {
                       secondary={
                         member.email && member.username
                           ? member.email
-                          : `Member since ${new Date(
-                              member.created_at
-                            ).toLocaleDateString()}`
+                          : `Member since ${formatDate(
+                              member.created_at,
+                              language
+                            )}`
                       }
                     />
 

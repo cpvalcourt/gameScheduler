@@ -20,13 +20,11 @@ const authenticate = async (req, res, next) => {
         if (!user) {
             return res.status(401).json({ message: 'User not found' });
         }
-        const payload = {
-            id: user.id,
-            email: user.email
-        };
         req.user = {
             id: user.id,
-            email: user.email
+            email: user.email,
+            username: user.username,
+            role: user.role
         };
         next();
     }

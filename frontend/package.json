@@ -13,14 +13,17 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@date-io/date-fns": "^3.2.1",
     "@emotion/react": "^11.11.3",
     "@emotion/styled": "^11.11.0",
     "@mui/icons-material": "^5.15.11",
     "@mui/material": "^5.15.11",
+    "@mui/x-date-pickers": "^8.5.3",
     "@types/crypto-js": "^4.2.2",
     "axios": "^1.10.0",
     "crypto-browserify": "^3.12.1",
     "crypto-js": "^4.2.0",
+    "date-fns": "^4.1.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-image-crop": "^11.0.10",

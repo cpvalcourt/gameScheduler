@@ -42,7 +42,7 @@ describe('GameSeriesController', () => {
                 start_date: '2024-07-01',
                 end_date: '2024-07-10',
             };
-            mockRequest.user = { id: 1, email: 'test@example.com' };
+            mockRequest.user = { id: 1, email: 'test@example.com', username: 'testuser', role: 'user' };
         });
         it('should create a series successfully', async () => {
             game_series_model_1.GameSeriesModel.create.mockResolvedValue(mockSeries);
@@ -82,7 +82,7 @@ describe('GameSeriesController', () => {
         };
         beforeEach(() => {
             mockRequest.params = { id: '1' };
-            mockRequest.user = { id: 1, email: 'test@example.com' };
+            mockRequest.user = { id: 1, email: 'test@example.com', username: 'testuser', role: 'user' };
         });
         it('should return series data if found', async () => {
             game_series_model_1.GameSeriesModel.findById.mockResolvedValue(mockSeries);
@@ -118,7 +118,7 @@ describe('GameSeriesController', () => {
                 start_date: '2024-07-05',
                 end_date: '2024-07-15',
             };
-            mockRequest.user = { id: 1, email: 'test@example.com' };
+            mockRequest.user = { id: 1, email: 'test@example.com', username: 'testuser', role: 'user' };
         });
         it('should update series if user is owner', async () => {
             game_series_model_1.GameSeriesModel.isOwner.mockResolvedValue(true);
@@ -147,7 +147,7 @@ describe('GameSeriesController', () => {
     describe('deleteSeries', () => {
         beforeEach(() => {
             mockRequest.params = { id: '1' };
-            mockRequest.user = { id: 1, email: 'test@example.com' };
+            mockRequest.user = { id: 1, email: 'test@example.com', username: 'testuser', role: 'user' };
         });
         it('should delete series if user is owner', async () => {
             game_series_model_1.GameSeriesModel.isOwner.mockResolvedValue(true);
@@ -190,7 +190,7 @@ describe('GameSeriesController', () => {
             },
         ];
         beforeEach(() => {
-            mockRequest.user = { id: 1, email: 'test@example.com' };
+            mockRequest.user = { id: 1, email: 'test@example.com', username: 'testuser', role: 'user' };
         });
         it('should return user series', async () => {
             game_series_model_1.GameSeriesModel.getUserSeries.mockResolvedValue(mockSeriesList);

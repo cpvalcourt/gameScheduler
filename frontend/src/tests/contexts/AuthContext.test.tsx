@@ -68,7 +68,11 @@ describe("AuthContext", () => {
       };
 
       // Set up localStorage mock before rendering
-      (localStorage.getItem as any).mockReturnValue("valid-token");
+      (localStorage.getItem as any).mockImplementation((key: string) => {
+        if (key === "token") return "valid-token";
+        if (key === "user") return JSON.stringify(mockUser);
+        return null;
+      });
       mockGet.mockResolvedValue({ data: { user: mockUser } });
 
       render(
@@ -87,7 +91,11 @@ describe("AuthContext", () => {
 
     it("should clear invalid token on mount", async () => {
       // Set up localStorage mock before rendering
-      (localStorage.getItem as any).mockReturnValue("invalid-token");
+      (localStorage.getItem as any).mockImplementation((key: string) => {
+        if (key === "token") return "invalid-token";
+        if (key === "user") return null;
+        return null;
+      });
       mockGet.mockRejectedValue(new Error("Invalid token"));
 
       render(
@@ -188,7 +196,11 @@ describe("AuthContext", () => {
       };
 
       // Set up localStorage mock before rendering
-      (localStorage.getItem as any).mockReturnValue("valid-token");
+      (localStorage.getItem as any).mockImplementation((key: string) => {
+        if (key === "token") return "valid-token";
+        if (key === "user") return JSON.stringify(mockUser);
+        return null;
+      });
       mockGet.mockResolvedValue({ data: { user: mockUser } });
 
       render(
@@ -199,6 +211,7 @@ describe("AuthContext", () => {
 
       // Wait for initial load
       await waitFor(() => {
+        expect(mockGet).toHaveBeenCalledWith("/users/me");
         expect(screen.getByTestId("user")).toHaveTextContent(
           JSON.stringify(mockUser)
         );

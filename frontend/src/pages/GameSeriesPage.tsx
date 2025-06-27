@@ -39,6 +39,7 @@ import {
 import { useI18n } from "../contexts/I18nContext";
 import api from "../services/api";
 import NavigationHeader from "../components/NavigationHeader";
+import { formatDate } from "../utils/dateUtils";
 
 interface GameSeries {
   id: number;
@@ -61,7 +62,7 @@ interface GameSeriesFormData {
 
 const GameSeriesPage = () => {
   const navigate = useNavigate();
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const [series, setSeries] = useState<GameSeries[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -281,7 +282,7 @@ const GameSeriesPage = () => {
                   {t("gameSeries.endDate")}
                 </TableCell>
                 <TableCell scope="col" id="actions-header">
-                  Actions
+                  {t("common.actions")}
                 </TableCell>
               </TableRow>
             </TableHead>
@@ -289,12 +290,14 @@ const GameSeriesPage = () => {
               {series.map((s) => (
                 <TableRow key={s.id}>
                   <TableCell headers="name-header">{s.name}</TableCell>
-                  <TableCell headers="type-header">{s.type}</TableCell>
+                  <TableCell headers="type-header">
+                    {t(`gameSeries.${s.type}`)}
+                  </TableCell>
                   <TableCell headers="start-date-header">
-                    {new Date(s.start_date).toLocaleDateString()}
+                    {formatDate(s.start_date, language)}
                   </TableCell>
                   <TableCell headers="end-date-header">
-                    {new Date(s.end_date).toLocaleDateString()}
+                    {formatDate(s.end_date, language)}
                   </TableCell>
                   <TableCell headers="actions-header">
                     <IconButton

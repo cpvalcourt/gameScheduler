@@ -2,10 +2,10 @@ import api from '../services/api';
 
 export interface TeamInvitation {
   id: number;
-  email: string;
-  role: 'captain' | 'player';
+  invited_email: string;
+  invited_role: 'captain' | 'player';
   status: 'pending' | 'accepted' | 'declined' | 'expired';
-  invited_by?: string;
+  invited_by_username?: string;
   created_at: string;
   expires_at: string;
 }
@@ -42,6 +42,12 @@ export const teamInvitationsApi = {
   // Get current user's pending invitations
   getMyInvitations: async (): Promise<{ invitations: MyInvitation[] }> => {
     const response = await api.get('/team-invitations/my-invitations');
+    return response.data;
+  },
+
+  // Get invitation details by token
+  getInvitationByToken: async (token: string): Promise<{ invitation: TeamInvitation }> => {
+    const response = await api.get(`/team-invitations/token/${token}`);
     return response.data;
   },
 

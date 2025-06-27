@@ -72,7 +72,7 @@ class TeamModel {
     }
     static async getTeamMembers(teamId) {
         const [rows] = await database_1.pool.execute(`SELECT tm.id, tm.team_id, tm.user_id, tm.role, tm.created_at, tm.updated_at,
-                    u.username, u.email
+                    u.username, u.email, u.profile_picture_url
              FROM TEAM_MEMBERS tm
              JOIN USERS u ON tm.user_id = u.id
              WHERE tm.team_id = ?`, [teamId]);
@@ -82,7 +82,10 @@ class TeamModel {
             user_id: row.user_id,
             role: row.role,
             created_at: row.created_at,
-            updated_at: row.updated_at
+            updated_at: row.updated_at,
+            username: row.username,
+            email: row.email,
+            profile_picture_url: row.profile_picture_url
         }));
     }
     static async getUserTeams(userId) {
@@ -106,6 +109,22 @@ class TeamModel {
     static async isTeamAdmin(teamId, userId) {
         const [rows] = await database_1.pool.execute('SELECT 1 FROM TEAM_MEMBERS WHERE team_id = ? AND user_id = ? AND role = "admin"', [teamId, userId]);
         return rows.length > 0;
+    }
+    static async getTeamStats(teamId) {
+        const [memberRows] = await database_1.pool.execute(`SELECT role, created_at FROM TEAM_MEMBERS WHERE team_id = ?`, [teamId]);
+        const [teamRows] = await database_1.pool.execute(`SELECT created_at, updated_at FROM TEAMS WHERE id = ?`, [teamId]);
+        const members = memberRows;
+        const team = teamRows[0];
+        const stats = {
+            totalMembers: members.length,
+            admins: members.filter(m => m.role === 'admin').length,
+            captains: members.filter(m => m.role === 'captain').length,
+            players: members.filter(m => m.role === 'player').length,
+            snackProviders: members.filter(m => m.role === 'snack_provider').length,
+            createdAt: team.created_at,
+            lastActivity: team.updated_at
+        };
+        return stats;
     }
 }
 exports.TeamModel = TeamModel;

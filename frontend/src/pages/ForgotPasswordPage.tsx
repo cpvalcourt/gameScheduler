@@ -11,12 +11,15 @@ import {
 } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import { requestPasswordReset } from "../api/auth";
+import { useI18n } from "../contexts/I18nContext";
+import LanguageSelector from "../components/LanguageSelector";
 
 const ForgotPasswordPage = () => {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { t } = useI18n();
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
@@ -36,6 +39,18 @@ const ForgotPasswordPage = () => {
   if (success) {
     return (
       <Container component="main" maxWidth="xs">
+        {/* Language Selector - Top Right */}
+        <Box
+          sx={{
+            position: "absolute",
+            top: 16,
+            right: 16,
+            zIndex: 1,
+          }}
+        >
+          <LanguageSelector variant="menu" size="small" />
+        </Box>
+
         <Box
           sx={{
             marginTop: 8,
@@ -55,15 +70,13 @@ const ForgotPasswordPage = () => {
             }}
           >
             <Typography component="h1" variant="h5" sx={{ mb: 3 }}>
-              Check Your Email
+              {t("auth.checkYourEmail")}
             </Typography>
             <Alert severity="success" sx={{ width: "100%", mb: 3 }}>
-              If an account with that email exists, you will receive a password
-              reset link shortly.
+              {t("auth.resetEmailSent")}
             </Alert>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-              Please check your email and click the link to reset your password.
-              The link will expire in 1 hour.
+              {t("auth.checkEmailForReset")}
             </Typography>
             <Button
               component={RouterLink}
@@ -72,7 +85,7 @@ const ForgotPasswordPage = () => {
               fullWidth
               sx={{ mt: 1, mb: 2 }}
             >
-              Back to Login
+              {t("auth.backToLogin")}
             </Button>
           </Paper>
         </Box>
@@ -82,6 +95,18 @@ const ForgotPasswordPage = () => {
 
   return (
     <Container component="main" maxWidth="xs">
+      {/* Language Selector - Top Right */}
+      <Box
+        sx={{
+          position: "absolute",
+          top: 16,
+          right: 16,
+          zIndex: 1,
+        }}
+      >
+        <LanguageSelector variant="menu" size="small" />
+      </Box>
+
       <Box
         sx={{
           marginTop: 8,
@@ -101,11 +126,10 @@ const ForgotPasswordPage = () => {
           }}
         >
           <Typography component="h1" variant="h5" sx={{ mb: 3 }}>
-            Forgot Password
+            {t("auth.forgotPassword")}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-            Enter your email address and we'll send you a link to reset your
-            password.
+            {t("auth.enterEmailForReset")}
           </Typography>
 
           {error && (
@@ -125,7 +149,7 @@ const ForgotPasswordPage = () => {
               required
               fullWidth
               id="email"
-              label="Email Address"
+              label={t("auth.emailAddress")}
               name="email"
               autoComplete="email"
               autoFocus
@@ -140,11 +164,11 @@ const ForgotPasswordPage = () => {
               sx={{ mt: 3, mb: 2 }}
               disabled={loading}
             >
-              {loading ? "Sending..." : "Send Reset Link"}
+              {loading ? t("auth.sending") : t("auth.sendResetLink")}
             </Button>
             <Box sx={{ textAlign: "center" }}>
               <Link component={RouterLink} to="/login" variant="body2">
-                Back to Login
+                {t("auth.backToLogin")}
               </Link>
             </Box>
           </Box>
